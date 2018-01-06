@@ -10,7 +10,7 @@
 #include <cmath>
 #include <sprout/cmath.hpp> 
 
-constexpr int N = 50;
+constexpr int N = 32;
 constexpr double Lx = 1.0;
 constexpr double Ly = 1.0;
 //constexpr double c = 1.0;
@@ -31,7 +31,7 @@ namespace mino2357{
         T* u;
         int Num;
     public:
-        constexpr extendedArray(int n){ Num = n; u = new T[(Num + 1) * (Num + 1)];}
+        extendedArray(int n){ Num = n; u = new T[(Num + 1) * (Num + 1)];}
         ~extendedArray(){ delete[] u;}
         
         constexpr T& operator()(int, int);
@@ -45,8 +45,8 @@ namespace mino2357{
 
     template <typename T = double>
     constexpr T initFunc(T x, T y) noexcept {
-        T a = 2.0;
-        T b = 2.0;
+        T a = 5.0;
+        T b = 5.0;
         return std::exp(- 25.0 *((x - a * Lx / 10.0) * (x - a * Lx / 10.0) + (y - b * Ly / 10.0) * (y - b * Ly / 10.0)));
     }
 
@@ -78,11 +78,11 @@ int main(){
     
     std::FILE *gp = popen( "gnuplot -persist", "w" );
     fprintf(gp, "set pm3d\n");
-    fprintf(gp, "set pm3d map\n");
+    //fprintf(gp, "set pm3d map\n");
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [0:%f]\n", Lx);
     fprintf(gp, "set yr [0:%f]\n", Ly);
-    //fprintf(gp, "set zr [-0.5:1.5]\n");
+    fprintf(gp, "set zr [0.0:1.0]\n");
     fprintf(gp, "set size square\n");
     //fprintf(gp, "set grid\n");
     //fprintf(gp, "unset key\n");
@@ -113,7 +113,7 @@ int main(){
 
         //u2の描画
         if(it%INTV == 0){
-            fprintf(gp, "splot '-'\n");
+            fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; ++i){
                 for(int j=0; j<=N; ++j){
                     fprintf(gp, "%f %f %f\n", x + i * dx, y + j * dy, u2(i, j));
