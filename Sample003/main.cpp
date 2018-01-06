@@ -10,19 +10,19 @@
 #include <iostream>
 #include <cmath>
 
-constexpr int N = 256;
+constexpr int N = 128;
 constexpr double Lx = 1.0;
 constexpr double Ly = 1.0;
-constexpr double cx = 1.0;
-constexpr double cy = 1.0;
+constexpr double cx = 0.1;
+constexpr double cy = 0.1;
 constexpr double D = 0.0;
 constexpr double tLimit = 1000;
 constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
-constexpr double dt = 0.002;
+constexpr double dt = 0.001;
 constexpr double x  = 0.;
 constexpr double y  = 0.;
-constexpr int INTV = 6;
+constexpr int INTV = 40;
 constexpr int plus = 8;
 
 namespace mino2357{
@@ -47,15 +47,15 @@ namespace mino2357{
 
     template <typename T = double>
     constexpr T initFunc(T x, T y) noexcept {
-        
+       /* 
         if(x >= 0.3 && x <= 0.8 && y >= 0.3 && y <= 0.8){
             return 1.0;
         }
         return 0.0;
-        
+        */
         T a = 5.0;
         T b = 5.0;
-        return std::exp( - 50.0 *((x - a * Lx / 10.0) * (x - a * Lx / 10.0) + (y - b * Ly / 10.0) * (y - b * Ly / 10.0)));
+        return std::exp( - 25.0 *((x - a * Lx / 10.0) * (x - a * Lx / 10.0) + (y - b * Ly / 10.0) * (y - b * Ly / 10.0)));
     }
 
     template <typename T = double>
@@ -71,7 +71,7 @@ namespace mino2357{
     constexpr void makeInitGrad(extendedArray<T>& u, extendedArray<T>& g){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                g(i, j) = (u(i-1, j) - u(i+1, j))/ (2.0 * dx) + (u(i, j-1) - u(i,j+1)) / (2.0 * dy);
+                g(i, j) = (u(i-1, j) - u(i+1, j))/ (2.0 * dx) + (u(i, j-1) - u(i, j+1)) / (2.0 * dy);
             }
         }
     }
@@ -122,27 +122,7 @@ namespace mino2357{
             }
         }
     }
-/*
-    template <typename T = double>
-    void makeSuccXU(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succU){
-        T z = - cx * dt;
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                succU(i, j) = coeff::X::a<>(i, j, u, g) * z * z * z + coeff::X::b<>(i, j, u, g) * z * z + coeff::X::c<>(i, j, g) * z + coeff::X::d<>(i, j, u);
-            }
-        }
-    }
     
-    template <typename T = double>
-    void makeSuccYU(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succU){
-        T z = - cy * dt;
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                succU(i, j) = coeff::Y::a<>(i, j, u, g) * z * z * z + coeff::Y::b<>(i, j, u, g) * z * z + coeff::Y::c<>(i, j, g) * z + coeff::Y::d<>(i, j, u);
-            }
-        }
-    }
-*/    
     template <typename T = double>
     void makeSuccU(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succU){
         T zx = - cx * dt;
@@ -155,27 +135,7 @@ namespace mino2357{
             }
         }
     }
-/*    
-    template <typename T = double>
-    void makeSuccXG(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succG){
-        T z = - cx * dt;
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                succG(i, j) = 3.0 * coeff::X::a(i, j, u, g) * z * z + 2.0 * coeff::X::b(i, j, u, g) * z + coeff::X::c(i, j, g);
-            }
-        }
-    }
-    
-    template <typename T = double>
-    void makeSuccYG(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succG){
-        T z = - cy * dt;
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                succG(i, j) = 3.0 * coeff::Y::a(i, j, u, g) * z * z + 2.0 * coeff::Y::b(i, j, u, g) * z + coeff::Y::c(i, j, g);
-            }
-        }
-    }
-*/    
+
     template <typename T = double>
     void makeSuccG(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succG){
         T zy = - cy * dt;
@@ -239,9 +199,6 @@ int main(){
     for(int it = 0; t<tLimit; ++it) {   
 
         //移流 cx > 0 の対応しかまだしてない．
-/*        mino2357::makeSuccXU(u1, g1, u2);
-        mino2357::makeSuccXG(u1, g1, g2);
-*/
         mino2357::makeSuccU(u1, g1, u2);
         mino2357::makeSuccG(u1, g1, g2);
         
