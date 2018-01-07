@@ -9,18 +9,18 @@
 #include <iostream>
 #include <cmath>
 
-constexpr int N = 256;
+constexpr int N = 512;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
 constexpr double xstart = -1.0;
 constexpr double ystart = -1.0;
 constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
-constexpr double dt = 0.001;
+constexpr double dt = 0.0001;
 constexpr double pi = 3.14159265358979323846264338327950288;
-constexpr double tLimit = 2.0 * pi;
-constexpr int INTV = 20;
-constexpr int plus = 4;
+constexpr double tLimit = 0.5 * pi;
+constexpr int INTV = 100;
+constexpr int plus = 16;
 
 namespace mino2357{
     template <typename T = double>
@@ -241,6 +241,8 @@ int main(){
     mino2357::makeInitFunc(u1);
     mino2357::makeInitGradX(u1, gx1);
     mino2357::makeInitGradY(u1, gy1);
+
+    std::cout << dt / dx << std::endl;
 
     /***********************************************/
     FILE* gp = popen("gnuplot -persist", "w");
