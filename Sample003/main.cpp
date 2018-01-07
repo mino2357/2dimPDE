@@ -1,7 +1,7 @@
 /*
  * 拡散方程式
  *
- * CIP method.
+ * M-CIP method.
  *
  * Takaaki MINOMO
  *
@@ -13,8 +13,8 @@
 constexpr int N = 128;
 constexpr double Lx = 1.0;
 constexpr double Ly = 1.0;
-constexpr double cx = 0.1;
-constexpr double cy = 0.1;
+constexpr double cx = 1.0;
+constexpr double cy = 1.0;
 constexpr double D = 0.0;
 constexpr double tLimit = 1000;
 constexpr double dx = Lx / N;
@@ -23,7 +23,7 @@ constexpr double dt = 0.001;
 constexpr double x  = 0.;
 constexpr double y  = 0.;
 constexpr int INTV = 40;
-constexpr int plus = 8;
+constexpr int plus = 4;
 
 namespace mino2357{
     
@@ -55,7 +55,8 @@ namespace mino2357{
         */
         T a = 5.0;
         T b = 5.0;
-        return std::exp( - 25.0 *((x - a * Lx / 10.0) * (x - a * Lx / 10.0) + (y - b * Ly / 10.0) * (y - b * Ly / 10.0)));
+        return std::exp( - 25.0 *((x - a * Lx / 10.0) * (x - a * Lx / 10.0)
+                        + (y - b * Ly / 10.0) * (y - b * Ly / 10.0)));
     }
 
     template <typename T = double>
@@ -82,12 +83,20 @@ namespace mino2357{
         namespace X{
             template <typename T = double>
             T a(int i, int j, extendedArray<T>& u, extendedArray<T>& g){
-                return (g(i, j) + g(i-1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i-1, j)) / (dx * dx * dx);
+                if(u(i, j) * cx >= 0.0){
+                    return (g(i, j) + g(i-1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i-1, j)) / (dx * dx * dx);
+                }else{
+                    return (g(i, j) + g(i+1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i+1, j)) / (dx * dx * dx);
+                }
             }
 
             template <typename T = double>
             T b(int i, int j, extendedArray<T>& u, extendedArray<T>& g){
-                return 3 * (u(i-1, j) - u(i, j)) / (dx * dx) + (2.0 * g(i, j) + g(i-1, j)) / (dx);
+                if(cx * u(i, j) >= 0.0){
+                    return 3.0 * (u(i-1, j) - u(i, j)) / (dx * dx) + (2.0 * g(i, j) + g(i-1, j)) / (dx);
+                }else{
+                    return 3.0 * (u(i+1, j) - u(i, j)) / (dx * dx) + (2.0 * g(i, j) + g(i+1, j)) / (dx);
+                }
             }
 
             template <typename T = double>
@@ -103,12 +112,20 @@ namespace mino2357{
         namespace Y{
             template <typename T = double>
             T a(int i, int j, extendedArray<T>& u, extendedArray<T>& g){
-                return (g(i, j) + g(i, j-1)) / (dx * dx) - 2.0 * (u(i, j) - u(i, j-1)) / (dx * dx * dx);
+                if(cy * u(i, j) >= 0.0){
+                    return (g(i, j) + g(i, j-1)) / (dx * dx) - 2.0 * (u(i, j) - u(i, j-1)) / (dx * dx * dx);
+                }else{
+                    return (g(i, j) + g(i, j+1)) / (dx * dx) - 2.0 * (u(i, j) - u(i, j+1)) / (dx * dx * dx);
+                }
             }
 
             template <typename T = double>
             T b(int i, int j, extendedArray<T>& u, extendedArray<T>& g){
-                return 3 * (u(i, j-1) - u(i, j)) / (dx * dx) + (2.0 * g(i, j) + g(i, j-1)) / (dx);
+                if(cy * u(i, j) >= 0.0){
+                    return 3.0 * (u(i, j-1) - u(i, j)) / (dx * dx) + (2.0 * g(i, j) + g(i, j-1)) / (dx);
+                }else{
+                    return 3.0 * (u(i, j+1) - u(i, j)) / (dx * dx) + (2.0 * g(i, j) + g(i, j+1)) / (dx);
+                }
             }
 
             template <typename T = double>
@@ -129,6 +146,19 @@ namespace mino2357{
         T zy = - cy * dt;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
+                if(cx * u(i, j) >= 0.0 && cy * u(i, j) >= 0.0){
+                    zx = - cx * dt;
+                    zy = - cy * dt;
+                }else if(cx * u(i, j) < 0.0 && cy * u(i, j) >= 0.0){
+                    zx = cx * dt;
+                    zy = - cy * dt;
+                }else if(cx * u(i, j) >= 0.0 && cy * u(i, j) < 0.0){
+                    zx = - cx * dt;
+                    zy = cy * dt;
+                }else if(cx * u(i, j) < 0.0 && cy * u(i, j) < 0.0){
+                    zx = cx * dt;
+                    zy = cy * dt;
+                }
                 succU(i, j) = 0.5 *
                       (coeff::X::a<>(i, j, u, g) * zx * zx * zx + coeff::X::b<>(i, j, u, g) * zx * zx + coeff::X::c<>(i, j, g) * zx + coeff::X::d<>(i, j, u)
                      + coeff::Y::a<>(i, j, u, g) * zy * zy * zy + coeff::Y::b<>(i, j, u, g) * zy * zy + coeff::Y::c<>(i, j, g) * zy + coeff::Y::d<>(i, j, u));
@@ -138,13 +168,26 @@ namespace mino2357{
 
     template <typename T = double>
     void makeSuccG(extendedArray<T>& u, extendedArray<T>& g, extendedArray<T>& succG){
-        T zy = - cy * dt;
         T zx = - cx * dt;
+        T zy = - cy * dt;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
+                if(cx * u(i, j) >= 0.0 && cy * u(i, j) >= 0.0){
+                    zx = - cx * dt;
+                    zy = - cy * dt;
+                }else if(cx * u(i, j) < 0.0 && cy * u(i, j) >= 0.0){
+                    zx = cx * dt;
+                    zy = - cy * dt;
+                }else if(cx * u(i, j) >= 0.0 && cy * u(i, j) < 0.0){
+                    zx = - cx * dt;
+                    zy = cy * dt;
+                }else if(cx * u(i, j) < 0.0 && cy * u(i, j) < 0.0){
+                    zx = cx * dt;
+                    zy = cy * dt;
+                }
                 succG(i, j) = 0.5 *  
-                      (3.0 * coeff::X::a(i, j, u, g) * zx * zx + 2.0 * coeff::X::b(i, j, u, g) * zx + coeff::X::c(i, j, g)
-                     + 3.0 * coeff::Y::a(i, j, u, g) * zy * zy + 2.0 * coeff::Y::b(i, j, u, g) * zy + coeff::Y::c(i, j, g));
+                     (3.0 * coeff::X::a(i, j, u, g) * zx * zx + 2.0 * coeff::X::b(i, j, u, g) * zx + coeff::X::c(i, j, g)
+                    + 3.0 * coeff::Y::a(i, j, u, g) * zy * zy + 2.0 * coeff::Y::b(i, j, u, g) * zy + coeff::Y::c(i, j, g));
             }
         }
     }
@@ -198,7 +241,7 @@ int main(){
     //タイムループ
     for(int it = 0; t<tLimit; ++it) {   
 
-        //移流 cx > 0 の対応しかまだしてない．
+        //移流
         mino2357::makeSuccU(u1, g1, u2);
         mino2357::makeSuccG(u1, g1, g2);
         
