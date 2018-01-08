@@ -9,18 +9,18 @@
 #include <iostream>
 #include <cmath>
 
-constexpr int N = 512;
+constexpr int N = 32;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
 constexpr double xstart = -1.0;
 constexpr double ystart = -1.0;
 constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
-constexpr double dt = 0.0001;
+constexpr double dt = 0.001;
 constexpr double pi = 3.14159265358979323846264338327950288;
-constexpr double tLimit = 2.0 * pi;
-constexpr int INTV = 100;
-constexpr int plus = 8;
+constexpr double tLimit = 200000.0 * pi;
+constexpr int INTV = 10;
+constexpr int plus = 1;
 
 namespace mino2357{
     template <typename T = double>
@@ -52,13 +52,13 @@ namespace mino2357{
 
     template <typename T = double>
     T f(T x, T y){
-        return -y;
+        return 1;
         return std::sin(pi * (x + y)) + 2.0;
     }
     
     template <typename T = double>
     T g(T x, T y){
-        return x;
+        return 1;
         return std::sin(pi * (x + y)) + 2.0;
     }
 
@@ -247,7 +247,7 @@ int main(){
     /***********************************************/
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
-    //fprintf(gp, "set pm3d map\n");
+    fprintf(gp, "set pm3d map\n");
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
     fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
@@ -286,6 +286,13 @@ int main(){
 				gy3(i, j) = 0.5 * (gy2(i, j) + gy3(i, j));
 			}
 		}
+
+		for(int i=0; i<=N; ++i){
+			for(int j=0; j<=N; ++j){
+                gx3(i, j) -= dt * gy1(i, j);
+                gy3(i, j) += dt * gx1(i, j);
+            }
+        }
 
         /*********************************************/
         if(it%INTV == 0){
