@@ -18,9 +18,9 @@ constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
 constexpr double dt = 0.0001;
 constexpr double pi = 3.14159265358979323846264338327950288;
-constexpr double tLimit = 0.5 * pi;
+constexpr double tLimit = 2.0 * pi;
 constexpr int INTV = 100;
-constexpr int plus = 16;
+constexpr int plus = 8;
 
 namespace mino2357{
     template <typename T = double>
@@ -64,8 +64,8 @@ namespace mino2357{
 
     template <typename T = double>
     void makeInitFunc(extendedArray<T>& u){
-        T a = 0.5;
-        T b = 0.5;
+       // T a = 0.5;
+       // T b = 0.5;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 if(xstart+i*dx >= 0.2 && xstart+i*dx <= 0.6 && ystart+j*dy >= 0.2 && ystart+j*dy <= 0.6){
@@ -251,7 +251,7 @@ int main(){
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
     fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
-    fprintf(gp, "set zr [-0.2:1.2]\n");
+  	//fprintf(gp, "set zr [-0.1:1.1]\n");
     fprintf(gp, "set size square\n");
 
     fprintf(gp, "splot '-' w l\n");
@@ -273,12 +273,20 @@ int main(){
     for(int it=0; t<=tLimit; ++it){
         
         mino2357::succUX(u1, gx1, u2);
-        mino2357::succUY(u2, gy1, u3);
+        mino2357::succUY(u1, gy1, u3);
         mino2357::succGX(u1, gx1, gx2);
-        mino2357::succGY(u1, gx2, gx3);
+        mino2357::succGY(u1, gx1, gx3);
         mino2357::succGX(u1, gy1, gy2);
-        mino2357::succGY(u1, gy2, gy3);
-        
+        mino2357::succGY(u1, gy1, gy3);
+       
+		for(int i=0; i<=N; ++i){
+			for(int j=0; j<=N; ++j){
+				u3(i, j)  = 0.5 * (u2(i, j) + u3(i, j));
+				gx3(i, j) = 0.5 * (gx2(i, j) + gx3(i, j));
+				gy3(i, j) = 0.5 * (gy2(i, j) + gy3(i, j));
+			}
+		}
+
         /*********************************************/
         if(it%INTV == 0){
             fprintf(gp, "splot '-' w l\n");
@@ -301,8 +309,20 @@ int main(){
             }
         }
 
-        t += dt;
+        t += dt / 2.0;
     }
+    fprintf(gp, "splot '-' w l\n");
+    for(int i=0; i<=N; i = i + plus){
+      	for(int j=0; j<=N; j = j + plus){
+           	fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1(i, j));
+      	}
+       	fprintf(gp, "\n");
+ 	}
+   	fprintf(gp, "e\n");
+   	fflush(gp);
+
+	std::cout << "simulation done.(mean)" << std::endl;
+	getchar();
 
     pclose(gp);
 }
