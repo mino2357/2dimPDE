@@ -61,7 +61,7 @@ namespace mino2357{
     template <typename T = double>
     void makeInitFuncU(extendedArray<N + 1>& u){
         T x, y;
-        T a = 0.0; T b = 0.0;
+        T a = 0.2; T b = 0.2;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 x = xstart + i * dx;
@@ -72,11 +72,11 @@ namespace mino2357{
                 }else{
                     u[i][j] = 0.0;
                 }
-                /*
-                u[i][j] = //0.2 * std::sin(pi * (x));
-                          2.0 * std::exp(- 10.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
-                */
-            }
+                
+                u[i][j] = //std::sin(pi * (x + y));
+                      - 2.0 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                
+            } 
         }
     }
 
@@ -96,8 +96,8 @@ namespace mino2357{
                     v[i][j] = 0.0;
                 }
                 */
-                v[i][j] = 0.0;//std::sin(pi * (x + y)) + 2.0;
-                         //- 2.0 * std::exp(- 10.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                v[i][j] = //std::sin(pi * (x + y));
+                        2.0 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
             }
         }
     }
@@ -132,9 +132,9 @@ namespace mino2357{
         template< typename T = double>
         T ay(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind){
             if(upwind[i][j] >= 0.0){
-                return (uy[i][j] + uy[i][j-1]) / (dx * dx) - 2.0 * (u[i][j] - u[i][j-1]) / (dx * dx * dx);
+                return (uy[i][j] + uy[i][j-1]) / (dy * dy) - 2.0 * (u[i][j] - u[i][j-1]) / (dy * dy * dy);
             }
-            return (uy[i][j] + uy[i][j+1]) / (dx * dx) - 2.0 * (u[i][j] - u[i][j+1]) / (dx * dx * dx);
+            return (uy[i][j] + uy[i][j+1]) / (dy * dy) - 2.0 * (u[i][j] - u[i][j+1]) / (dy * dy * dy);
         }
   
         template< typename T = double>
@@ -148,9 +148,9 @@ namespace mino2357{
         template< typename T = double>
         T by(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind){
             if(upwind[i][j] >= 0.0){
-                return 3.0 * (u[i][j-1] - u[i][j]) / (dx * dx) + (2.0 * uy[i][j] + uy[i][j-1]) / (dx);
+                return 3.0 * (u[i][j-1] - u[i][j]) / (dy * dy) + (2.0 * uy[i][j] + uy[i][j-1]) / (dy);
             }
-            return 3.0 * (u[i][j+1] - u[i][j]) / (dx * dx) + (2.0 * uy[i][j] + uy[i][j+1]) / (dx);
+            return 3.0 * (u[i][j+1] - u[i][j]) / (dy * dy) + (2.0 * uy[i][j] + uy[i][j+1]) / (dy);
         }
   
         template< typename T = double>
@@ -188,24 +188,6 @@ namespace mino2357{
         }
     }
 
-    // ux1 -> ux2 / ux1 
-    template <typename T = double>
-    void succGradX(extendedArray<N + 1>& u1, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
-        T up;
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                if(upwind[i][j] >= 0){
-                    up = - upwind[i][j] * dt;
-                }else{
-                    up = upwind[i][j] * dt;
-                }
-                u2[i][j] =   3.0 * coeff::ax(i, j, u1, ux, upwind) * up * up
-                           + 2.0 * coeff::bx(i, j, u1, ux, upwind) * up
-                           +       coeff::cx(i, j, ux);
-            }
-        }
-    }
-    
     template <typename T = double>
     void succY(extendedArray<N + 1>& u1, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
         T up;
@@ -224,6 +206,25 @@ namespace mino2357{
         }
     }
 
+    // ux1 -> ux2 / ux1 
+    template <typename T = double>
+    void succGradX(extendedArray<N + 1>& u1, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
+        T up;
+        for(int i=0; i<=N; ++i){
+            for(int j=0; j<=N; ++j){
+                if(upwind[i][j] >= 0){
+                    up = - upwind[i][j] * dt;
+                }else{
+                    up = upwind[i][j] * dt;
+                }
+                u2[i][j] =   3.0 * coeff::ax(i, j, u1, ux, upwind) * up * up
+                           + 2.0 * coeff::bx(i, j, u1, ux, upwind) * up
+                           +       coeff::cx(i, j, ux);
+            }
+        }
+    }
+
+    
     template <typename T = double>
     void succGradY(extendedArray<N + 1>& u1, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
         T up;
@@ -245,7 +246,7 @@ namespace mino2357{
     void diffusion(extendedArray<N + 1>& u1, extendedArray<N + 1>& u2){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                u2[i][j] = u2[i][j] + dt / Re * (u1[i-1][j] - 2.0 * u1[i][j] + u1[i+1][j]) / (dx * dx) 
+                u2[i][j] = u1[i][j] + dt / Re * (u1[i-1][j] - 2.0 * u1[i][j] + u1[i+1][j]) / (dx * dx) 
                                     + dt / Re * (u1[i][j-1] - 2.0 * u1[i][j] + u1[i][j+1]) / (dy * dy);
             }
         }
@@ -302,7 +303,7 @@ int main(){
     
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
-    //fprintf(gp, "set pm3d map\n");
+    fprintf(gp, "set pm3d map\n");
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
     fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
@@ -312,7 +313,7 @@ int main(){
     fprintf(gp, "splot '-' w l\n");
     for(int i=0; i<=N; i = i + plus){
         for(int j=0; j<=N; j = j + plus){
-            fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1[i][j]);//mino2357::speed(i, j, u1, v1));
+            fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u1, v1));
         }
         fprintf(gp, "\n");
     }
@@ -332,36 +333,32 @@ int main(){
         mino2357::succX(u1, ux1, u1, u2);
         mino2357::succY(u2, uy1, v1, u3);
         //mino2357::mean(u2, u3, u3);
-        mino2357::diffusion(u1, u3);
+        //mino2357::diffusion(u1, u3);
 
         //v
         mino2357::succX(v1, vx1, u1, v2);
-        mino2357::succY(v2, vy1, v1, v2);
+        mino2357::succY(v2, vy1, v1, v3);
         //mino2357::mean(v2, v3, v3);
-        mino2357::diffusion(v1, v3);
+        //mino2357::diffusion(v1, v3);
 
         //ux
-        mino2357::succGradX(ux1, ux1, u1, ux2);
-        mino2357::succGradY(ux2, ux1, v1, ux3);
+        mino2357::succGradX(u1, ux1, u1, ux2);
 
         //uy
-        mino2357::succGradX(vx1, uy1, u1, vx2);
-        mino2357::succGradY(vx2, uy1, v1, vx3);
+        mino2357::succGradY(u1, uy1, v1, uy2);
         
         //vx
-        mino2357::succGradX(uy1, vx1, u1, uy2);
-        mino2357::succGradY(uy2, vx1, v1, uy3);
+        mino2357::succGradX(v1, vx1, u1, vx2);
 
         //vy
-        mino2357::succGradX(vy1, vy1, u1, vy2);
-        mino2357::succGradY(vy2, vy1, v1, vy3);
+        mino2357::succGradY(v1, vy1, v1, vy2);
 
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                ux3[i][j] = ux3[i][j] - dt * (ux1[i][j] * ux1[i][j] + vx1[i][j] * uy1[i][j]);
-                uy3[i][j] = uy3[i][j] - dt * (uy1[i][j] * ux1[i][j] + vy1[i][j] * uy1[i][j]);
-                vx3[i][j] = vx3[i][j] - dt * (ux1[i][j] * vx1[i][j] + vx1[i][j] * vy1[i][j]);
-                vy3[i][j] = vy3[i][j] - dt * (uy1[i][j] * vx1[i][j] + vy1[i][j] * vy1[i][j]);
+                ux3[i][j] = ux2[i][j] - dt * (ux2[i][j] * ux2[i][j] + vx2[i][j] * uy2[i][j]);
+                uy3[i][j] = uy2[i][j] - dt * (uy2[i][j] * ux2[i][j] + vy2[i][j] * uy2[i][j]);
+                vx3[i][j] = vx2[i][j] - dt * (ux2[i][j] * vx2[i][j] + vx2[i][j] * vy2[i][j]);
+                vy3[i][j] = vy2[i][j] - dt * (uy2[i][j] * vx2[i][j] + vy2[i][j] * vy2[i][j]);
             }
         }
 
@@ -369,7 +366,7 @@ int main(){
             fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; i = i + plus){
                 for(int j=0; j<=N; j = j + plus){
-                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u3(i, j));
+                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
                 }
                 fprintf(gp, "\n");
             }
