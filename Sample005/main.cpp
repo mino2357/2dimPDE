@@ -1,5 +1,5 @@
 /*
- * convection eq.
+ * NS eq.
  *
  * CIP method.
  * 
@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <array>
 
 constexpr int N = 64;
 constexpr double Lx =  2.0;
@@ -23,23 +24,40 @@ constexpr int INTV = 100;
 constexpr int plus = 2;
 
 namespace mino2357{
-    template <typename T = double>
+    namespace utility{
+		// [ minimum, maximum ) の範囲でラップアラウンド
+		template <typename T>
+		constexpr T wrap_around( T value, T minimum, T maximum )
+		{
+			const T n = ( value - minimum ) % ( maximum - minimum );
+			return n >= 0 ? ( n + minimum ) : ( n + maximum ); 
+		}
+	}
+	
+    template <std::size_t N, typename T = double>
     class extendedArray{
-    private:
-        T* u;
-        int num;
+	
+		std::array< std::array< T, N >, N > arr_;
+	
     public:
-        extendedArray(int n){
-            num = n;
-            u = new T[num * num];
+        constexpr extendedArray() : arr_() {
         }
-        ~extendedArray(){ delete[] u;}
+		
+        ~extendedArray() = default;
 
-        constexpr T& operator()(int i, int j){
-            return u[(((j % num) + num) % num) * num + ((i % num) + num) % num];
-        }
+		auto& operator[]( int i ) {
+			i = utility::wrap_around( i, 0, static_cast< int >( N ) );
+			return arr_[i];
+		}
+		
+		constexpr T& operator()(int i, int j) {
+            i = utility::wrap_around( i, 0, static_cast< int >( N ) );
+			j = utility::wrap_around( j, 0, static_cast< int >( N ) );
+			std::cout << "T&" << std::endl;
+            return arr_[ i ][ j ];
+		}
     };
-    
+/*
     template <typename T = double>
     T x(int i){
         return i;
@@ -63,37 +81,39 @@ namespace mino2357{
         return x;
         return std::sin(pi * (x + y)) + 2.0;
     }
-
-    template <typename T = double>
-    void makeInitFuncU(extendedArray<T>& u){
-       // T a = 0.5;
-       // T b = 0.5;
+*/
+    template <typename T>
+    void makeInitFuncU(extendedArray<N + 1>& u){
+        T x;
+        T y;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                if(xstart+i*dx >= 0.2 && xstart+i*dx <= 0.6 && ystart+j*dy >= 0.2 && ystart+j*dy <= 0.6){
-                    u(i, j) = 1.0;
+                x = xstart + i * dx;
+                y = ystart + j * dy;
+                if(x >= 0.2 && x <= 0.6 && y >= 0.2 && y <= 0.6){
+                    u[i][j] = 1.0;
                 }else{
-                    u(i, j) = 0.0;
+                    u[i][j] = 0.0;
                 }
                 //u(i, j) = //std::sin(pi * (xstart + i * dx + ystart + j * dy)) + 2.0;
                   //        std::exp(- 25.0 * (std::pow(xstart + i * dx - a, 2) + std::pow(ystart + j * dy - b, 2)));
             }
         }
     }
-
+/*
     template <typename T = double>
     void makeInitFuncV(extendedArray<T>& u){
         T a = 0.5;
         T b = 0.5;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                /*
+                
                 if(xstart+i*dx >= 0.2 && xstart+i*dx <= 0.6 && ystart+j*dy >= 0.2 && ystart+j*dy <= 0.6){
                     u(i, j) = 1.0;
                 }else{
                     u(i, j) = 0.0;
                 }
-                */
+                
                 u(i, j) = //std::sin(pi * (xstart + i * dx + ystart + j * dy)) + 2.0;
                           std::exp(- 25.0 * (std::pow(xstart + i * dx - a, 2) + std::pow(ystart + j * dy - b, 2)));
             }
@@ -117,7 +137,9 @@ namespace mino2357{
             }
         }
     }
+*/
 
+/*
     namespace coeff{
         namespace X{
             namespace U{
@@ -235,7 +257,9 @@ namespace mino2357{
             }
         }
     }
+*/
 
+/*
     template <typename T = double>
     void succUUU(extendedArray<T>& u1, extendedArray<T>& ugx, extendedArray<T>& u2){
         T up;
@@ -307,6 +331,8 @@ namespace mino2357{
             }
         }
     }
+*/
+
 /*
     template <typename T = double>
     void succGX(extendedArray<T>& u, extendedArray<T>& gx1, extendedArray<T>& gx2){
@@ -341,42 +367,39 @@ namespace mino2357{
             }
         }
     }   */
+/*
+    template <typename T = double>
+    T speed(extendedArray<N + 1>& u, extendedArray<N + 1>& v, int i, int j){
+        return std::sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
+    }
+*/
 }
 
 
 int main(){
-    auto u1   = mino2357::extendedArray<>(N + 1);
-    auto u2   = mino2357::extendedArray<>(N + 1);
-    auto u3   = mino2357::extendedArray<>(N + 1);
-    auto ugx1 = mino2357::extendedArray<>(N + 1);
-    auto ugy1 = mino2357::extendedArray<>(N + 1);
-    auto ugx2 = mino2357::extendedArray<>(N + 1);
-    auto ugy2 = mino2357::extendedArray<>(N + 1);
-    auto ugx3 = mino2357::extendedArray<>(N + 1);
-    auto ugy3 = mino2357::extendedArray<>(N + 1);
 
-    auto v1   = mino2357::extendedArray<>(N + 1);
-    auto v2   = mino2357::extendedArray<>(N + 1);
-    auto v3   = mino2357::extendedArray<>(N + 1);
-    auto vgx1 = mino2357::extendedArray<>(N + 1);
-    auto vgy1 = mino2357::extendedArray<>(N + 1);
-    auto vgx2 = mino2357::extendedArray<>(N + 1);
-    auto vgy2 = mino2357::extendedArray<>(N + 1);
-    auto vgx3 = mino2357::extendedArray<>(N + 1);
-    auto vgy3 = mino2357::extendedArray<>(N + 1);
+    auto u1  = mino2357::extendedArray<N + 1>{};
+    auto u2  = mino2357::extendedArray<N + 1>{};
+    auto u3  = mino2357::extendedArray<N + 1>{};
+    auto ux1 = mino2357::extendedArray<N + 1>{};
+    auto ux2 = mino2357::extendedArray<N + 1>{};
+    auto ux3 = mino2357::extendedArray<N + 1>{};
+    auto uy1 = mino2357::extendedArray<N + 1>{};
+    auto uy2 = mino2357::extendedArray<N + 1>{};
+    auto uy3 = mino2357::extendedArray<N + 1>{};
 
-    mino2357::makeInitFuncU(u1);
-    mino2357::makeInitFuncV(v1);
-    
-    mino2357::makeInitGradX(u1, ugx1);
-    mino2357::makeInitGradY(u1, ugy1);
-    
-    mino2357::makeInitGradX(v1, vgx1);
-    mino2357::makeInitGradY(v1, vgy1);
-
-    std::cout << dt / dx << std::endl;
+    auto v1  = mino2357::extendedArray<N + 1>{};
+    auto v2  = mino2357::extendedArray<N + 1>{};
+    auto v3  = mino2357::extendedArray<N + 1>{};
+    auto vx1 = mino2357::extendedArray<N + 1>{};
+    auto vx2 = mino2357::extendedArray<N + 1>{};
+    auto vx3 = mino2357::extendedArray<N + 1>{};
+    auto vy1 = mino2357::extendedArray<N + 1>{};
+    auto vy2 = mino2357::extendedArray<N + 1>{};
+    auto vy3 = mino2357::extendedArray<N + 1>{};
 
     /***********************************************/
+    /*
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
     //fprintf(gp, "set pm3d map\n");
@@ -395,6 +418,7 @@ int main(){
     }
     fprintf(gp, "e\n");
     fflush(gp);
+    */
     /******************************************************/
 
     std::cout << "Enter!" << std::endl;
@@ -404,24 +428,7 @@ int main(){
 
     for(int it=0; t<=tLimit; ++it){
         
-        mino2357::succUUU(u1, ugx1, u2);
-        mino2357::succUVU(u2, v1, ugy1, u3);
-        mino2357::succVUV(v1, u1, vgx1, v2);
-        mino2357::succVVV(v2, vgy1, v3);
-        /*
-        mino2357::succGX(u1, ugx1, ugx2);
-        mino2357::succGY(u1, ugx1, ugx3);
-        mino2357::succGX(u1, ugy1, ugy2);
-        mino2357::succGY(u1, ugy1, ugy3);
-        */
-		for(int i=0; i<=N; ++i){
-			for(int j=0; j<=N; ++j){
-				ugx3(i, j) = 0.5 * (ugx2(i, j) + ugx3(i, j));
-				ugy3(i, j) = 0.5 * (ugy2(i, j) + ugy3(i, j));
-			}
-		}
-
-        /*********************************************/
+/*
         if(it%INTV == 0){
             fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; i = i + plus){
@@ -433,18 +440,11 @@ int main(){
             fprintf(gp, "e\n");
             fflush(gp);
         }
-        /*********************************************/
-
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                u1(i, j)  = u3(i, j);
-                ugx1(i, j) = ugx3(i, j);
-                ugy1(i, j) = ugy3(i, j);
-            }
-        }
 
         t += dt;
+    */
     }
+    /*
     fprintf(gp, "splot '-' w l\n");
     for(int i=0; i<=N; i = i + plus){
       	for(int j=0; j<=N; j = j + plus){
@@ -459,4 +459,5 @@ int main(){
 	getchar();
 
     pclose(gp);
+    */  
 }
