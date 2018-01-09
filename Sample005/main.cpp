@@ -10,19 +10,19 @@
 #include <cmath>
 #include <array>
 
-constexpr int N = 64;
-constexpr double Re = 100.0;
+constexpr int N = 256;
+constexpr double Re = 1000.0;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
-constexpr double xstart = -1.0;
-constexpr double ystart = -1.0;
+constexpr double xstart = - 1.0;
+constexpr double ystart = - 1.0;
 constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
 constexpr double dt = 0.0001;
 constexpr double pi = 3.14159265358979323846264338327950288;
 constexpr double tLimit = 20000.0 * pi;
 constexpr int INTV = 100;
-constexpr int plus = 2;
+constexpr int plus = 4;
 
 namespace mino2357{
     namespace utility{
@@ -61,7 +61,7 @@ namespace mino2357{
     template <typename T = double>
     void makeInitFuncU(extendedArray<N + 1>& u){
         T x, y;
-        T a = 0.2; T b = 0.2;
+        T a = 0.4; T b = 0.4;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 x = xstart + i * dx;
@@ -73,8 +73,8 @@ namespace mino2357{
                     u[i][j] = 0.0;
                 }
                 
-                u[i][j] = //std::sin(pi * (x + y));
-                      - 2.0 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                u[i][j] =// (std::sin(pi * x));// + std::sin(pi * (y));
+                       0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
                 
             } 
         }
@@ -96,8 +96,8 @@ namespace mino2357{
                     v[i][j] = 0.0;
                 }
                 */
-                v[i][j] = //std::sin(pi * (x + y));
-                        2.0 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                v[i][j] = 0;//0.1 * std::sin(pi * (x));
+                        //0.3 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
             }
         }
     }
@@ -267,6 +267,11 @@ namespace mino2357{
     }
 }
 
+int e(int i){
+    int num = N + 1;
+    i = ((i % num) + num) % num;
+    return i;
+}
 
 int main(){
 
@@ -303,7 +308,7 @@ int main(){
     
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
-    fprintf(gp, "set pm3d map\n");
+    //fprintf(gp, "set pm3d map\n");
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
     fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
@@ -313,7 +318,8 @@ int main(){
     fprintf(gp, "splot '-' w l\n");
     for(int i=0; i<=N; i = i + plus){
         for(int j=0; j<=N; j = j + plus){
-            fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u1, v1));
+            //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u1, v1));
+            fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1[i][j]);
         }
         fprintf(gp, "\n");
     }
@@ -355,10 +361,22 @@ int main(){
 
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                ux3[i][j] = ux2[i][j] - dt * (ux2[i][j] * ux2[i][j] + vx2[i][j] * uy2[i][j]);
-                uy3[i][j] = uy2[i][j] - dt * (uy2[i][j] * ux2[i][j] + vy2[i][j] * uy2[i][j]);
-                vx3[i][j] = vx2[i][j] - dt * (ux2[i][j] * vx2[i][j] + vx2[i][j] * vy2[i][j]);
-                vy3[i][j] = vy2[i][j] - dt * (uy2[i][j] * vx2[i][j] + vy2[i][j] * vy2[i][j]);
+                ux3[i][j] = ux2[i][j]
+                            + dt / Re * (ux2[i-1][j] - 2.0 * ux2[i][j] + ux2[i+1][j]/(dx * dx))
+                            + dt / Re * (uy2[e(i-1)][e(j-1)] + uy2[e(i+1)][e(j+1)] - uy2[e(i-1)][e(j+1)] - uy2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            - dt * (ux2[i][j] * ux2[i][j] + vx2[i][j] * uy2[i][j]);
+                uy3[i][j] = uy2[i][j] 
+                            + dt / Re * (ux2[e(i-1)][e(j-1)] + ux2[e(i+1)][e(j+1)] - ux2[e(i-1)][e(j+1)] - ux2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            + dt / Re * (uy2[i][j-1] - 2.0 * uy2[i][j] + uy2[i][j+1]/(dy * dy))
+                            - dt * (uy2[i][j] * ux2[i][j] + vy2[i][j] * uy2[i][j]);
+                vx3[i][j] = vx2[i][j] 
+                            + dt / Re * (vx2[i-1][j] - 2.0 * vx2[i][j] + vx2[i+1][j]/(dx * dx))
+                            + dt / Re * (vy2[e(i-1)][e(j-1)] + vy2[e(i+1)][e(j+1)] - vy2[e(i-1)][e(j+1)] - vy2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            - dt * (ux2[i][j] * vx2[i][j] + vx2[i][j] * vy2[i][j]);
+                vy3[i][j] = vy2[i][j] 
+                            + dt / Re * (vx2[e(i-1)][e(j-1)] + vx2[e(i+1)][e(j+1)] - vx2[e(i-1)][e(j+1)] - vx2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            + dt / Re * (vy2[i][j-1] - 2.0 * vy2[i][j] + vy2[i][j+1]/(dy * dy))
+                            - dt * (uy2[i][j] * vx2[i][j] + vy2[i][j] * vy2[i][j]);
             }
         }
 
@@ -366,7 +384,8 @@ int main(){
             fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; i = i + plus){
                 for(int j=0; j<=N; j = j + plus){
-                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
+                    //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
+                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u3[i][j]);
                 }
                 fprintf(gp, "\n");
             }
@@ -384,12 +403,9 @@ int main(){
                 vy1[i][j] = vy3[i][j];
             }
         }
-
         t += dt;
-    
     }
 
- 
     fprintf(gp, "splot '-' w l\n");
     for(int i=0; i<=N; i = i + plus){
       	for(int j=0; j<=N; j = j + plus){
