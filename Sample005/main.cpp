@@ -11,6 +11,7 @@
 #include <array>
 
 constexpr int N = 64;
+constexpr double Re = 100.0;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
 constexpr double xstart = -1.0;
@@ -19,7 +20,7 @@ constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
 constexpr double dt = 0.0001;
 constexpr double pi = 3.14159265358979323846264338327950288;
-constexpr double tLimit = 2.0 * pi;
+constexpr double tLimit = 20000.0 * pi;
 constexpr int INTV = 100;
 constexpr int plus = 2;
 
@@ -53,326 +54,216 @@ namespace mino2357{
 		constexpr T& operator()(int i, int j) {
             i = utility::wrap_around( i, 0, static_cast< int >( N ) );
 			j = utility::wrap_around( j, 0, static_cast< int >( N ) );
-			std::cout << "T&" << std::endl;
             return arr_[ i ][ j ];
 		}
     };
-/*
-    template <typename T = double>
-    T x(int i){
-        return i;
-        return xstart + i * dx;
-    }
     
     template <typename T = double>
-    T y(int j){
-        return j;
-        return ystart + j * dy;
-    }
-
-    template <typename T = double>
-    T f(T x, T y){
-        return -y;
-        return std::sin(pi * (x + y)) + 2.0;
-    }
-    
-    template <typename T = double>
-    T g(T x, T y){
-        return x;
-        return std::sin(pi * (x + y)) + 2.0;
-    }
-*/
-    template <typename T>
     void makeInitFuncU(extendedArray<N + 1>& u){
-        T x;
-        T y;
+        T x, y;
+        T a = 0.0; T b = 0.0;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 x = xstart + i * dx;
                 y = ystart + j * dy;
+                
                 if(x >= 0.2 && x <= 0.6 && y >= 0.2 && y <= 0.6){
                     u[i][j] = 1.0;
                 }else{
                     u[i][j] = 0.0;
                 }
-                //u(i, j) = //std::sin(pi * (xstart + i * dx + ystart + j * dy)) + 2.0;
-                  //        std::exp(- 25.0 * (std::pow(xstart + i * dx - a, 2) + std::pow(ystart + j * dy - b, 2)));
+                /*
+                u[i][j] = //0.2 * std::sin(pi * (x));
+                          2.0 * std::exp(- 10.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                */
             }
         }
     }
-/*
+
     template <typename T = double>
-    void makeInitFuncV(extendedArray<T>& u){
-        T a = 0.5;
-        T b = 0.5;
+    void makeInitFuncV(extendedArray<N + 1>& v){
+        
+        T x, y;
+        T a = 0.0; T b = 0.0;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                
+                x = xstart + i * dx;
+                y = ystart + j * dy;
+              /*
                 if(xstart+i*dx >= 0.2 && xstart+i*dx <= 0.6 && ystart+j*dy >= 0.2 && ystart+j*dy <= 0.6){
-                    u(i, j) = 1.0;
+                    v[i][j] = 1.0;
                 }else{
-                    u(i, j) = 0.0;
+                    v[i][j] = 0.0;
                 }
-                
-                u(i, j) = //std::sin(pi * (xstart + i * dx + ystart + j * dy)) + 2.0;
-                          std::exp(- 25.0 * (std::pow(xstart + i * dx - a, 2) + std::pow(ystart + j * dy - b, 2)));
+                */
+                v[i][j] = 0.0;//std::sin(pi * (x + y)) + 2.0;
+                         //- 2.0 * std::exp(- 10.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
             }
         }
     }
 
     template <typename T = double>
-    void makeInitGradX(extendedArray<T>& u, extendedArray<T>& gx1){
+    void makeInitGradX(extendedArray<N + 1>& f, extendedArray<N + 1>& fx){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                gx1(i, j) = (u(i+1, j) - u(i-1, j)) / (2.0 * dx);
+                fx[i][j] = (f[i+1][j] - f[i-1][j]) / (2.0 * dx);
             }
         }
     }
 
     template <typename T = double>
-    void makeInitGradY(extendedArray<T>& u, extendedArray<T>& gy1){
+    void makeInitGradY(extendedArray<N + 1>& g, extendedArray<N + 1>& gy){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                gy1(i, j) = (u(i, j+1) - u(i, j-1)) / (2.0 * dy);
+                gy[i][j] = (g[i][j+1] - g[i][j-1]) / (2.0 * dy);
             }
         }
     }
-*/
 
-/*
     namespace coeff{
-        namespace X{
-            namespace U{
-                template< typename T = double>
-                T a(int i, int j, extendedArray<T>& u, extendedArray<T>& ugx){
-                    if(u(x(i), y(j)) >= 0.0){
-                        return (ugx(i, j) + ugx(i-1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i-1, j)) / (dx * dx * dx);
-                    }
-                    return (ugx(i, j) + ugx(i+1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i+1, j)) / (dx * dx * dx);
-                }
-            
-                template< typename T = double>
-                T b(int i, int j, extendedArray<T>& u, extendedArray<T>& ugx){
-                    if(u(x(i), y(j)) >= 0.0){
-                        return 3.0 * (u(i-1, j) - u(i, j)) / (dx * dx) + (2.0 * ugx(i, j) + ugx(i-1, j)) / (dx);
-                    }
-                    return 3.0 * (u(i+1, j) - u(i, j)) / (dx * dx) + (2.0 * ugx(i, j) + ugx(i+1, j)) / (dx);
-                }
-            
-                template< typename T = double>
-                T c(int i, int j, extendedArray<T>& g){
-                    return g(i, j);
-                }
-            
-                template< typename T = double>
-                T d(int i, int j, extendedArray<T>& u){
-                    return u(i, j);
-                }
+        template< typename T = double>
+        T ax(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind){
+            if(upwind[i][j] >= 0.0){
+                return (ux[i][j] + ux[i-1][j]) / (dx * dx) - 2.0 * (u[i][j] - u[i-1][j]) / (dx * dx * dx);
             }
-
-            namespace V{
-                template< typename T = double>
-                T a(int i, int j, extendedArray<T>& u, extendedArray<T>& v, extendedArray<T>& ugx){
-                    if(v(x(i), y(j)) >= 0.0){
-                        return (ugx(i, j) + ugx(i-1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i-1, j)) / (dx * dx * dx);
-                    }
-                    return (ugx(i, j) + ugx(i+1, j)) / (dx * dx) - 2.0 * (u(i, j) - u(i+1, j)) / (dx * dx * dx);
-                }
-            
-                template< typename T = double>
-                T b(int i, int j, extendedArray<T>& u, extendedArray<T>& v, extendedArray<T>& ugx){
-                    if(v(x(i), y(j)) >= 0.0){
-                        return 3.0 * (u(i-1, j) - u(i, j)) / (dx * dx) + (2.0 * ugx(i, j) + ugx(i-1, j)) / (dx);
-                    }
-                    return 3.0 * (u(i+1, j) - u(i, j)) / (dx * dx) + (2.0 * ugx(i, j) + ugx(i+1, j)) / (dx);
-                }
-            
-                template< typename T = double>
-                T c(int i, int j, extendedArray<T>& g){
-                    return g(i, j);
-                }
-            
-                template< typename T = double>
-                T d(int i, int j, extendedArray<T>& u){
-                    return u(i, j);
-                }
-            }
+            return (ux[i][j] + ux[i+1][j]) / (dx * dx) - 2.0 * (u[i][j] - u[i+1][j]) / (dx * dx * dx);
         }
 
-        namespace Y{
-            namespace U{
-                template< typename T = double>
-                T a(int i, int j, extendedArray<T>& u, extendedArray<T>& gy){
-                    if(u(x(i), y(j)) >= 0.0){
-                        return (gy(i, j) + gy(i, j-1)) / (dy * dy) - 2.0 * (u(i, j) - u(i, j-1)) / (dy * dy * dy);
-                    }
-                    return (gy(i, j) + gy(i, j+1)) / (dy * dy) - 2.0 * (u(i, j) - u(i, j+1)) / (dy * dy * dy);
-                }
-            
-                template< typename T = double>
-                T b(int i, int j, extendedArray<T>& u, extendedArray<T>& gy){
-                    if(u(x(i), y(j)) >= 0.0){
-                        return 3.0 * (u(i, j-1) - u(i, j)) / (dy * dy) + (2.0 * gy(i, j) + gy(i, j-1)) / (dy);
-                    }
-                    return 3.0 * (u(i, j+1) - u(i, j)) / (dy * dy) + (2.0 * gy(i, j) + gy(i, j+1)) / (dy);
-                }
-            
-                template< typename T = double>
-                T c(int i, int j, extendedArray<T>& g){
-                    return g(i, j);
-                }
-            
-                template< typename T = double>
-                T d(int i, int j, extendedArray<T>& u){
-                    return u(i, j);
-                }
+        template< typename T = double>
+        T ay(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind){
+            if(upwind[i][j] >= 0.0){
+                return (uy[i][j] + uy[i][j-1]) / (dx * dx) - 2.0 * (u[i][j] - u[i][j-1]) / (dx * dx * dx);
             }
+            return (uy[i][j] + uy[i][j+1]) / (dx * dx) - 2.0 * (u[i][j] - u[i][j+1]) / (dx * dx * dx);
+        }
+  
+        template< typename T = double>
+        T bx(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind){
+            if(upwind[i][j] >= 0.0){
+                return 3.0 * (u[i-1][j] - u[i][j]) / (dx * dx) + (2.0 * ux[i][j] + ux[i-1][j]) / (dx);
+            }
+            return 3.0 * (u[i+1][j] - u[i][j]) / (dx * dx) + (2.0 * ux[i][j] + ux[i+1][j]) / (dx);
+        }
+        
+        template< typename T = double>
+        T by(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind){
+            if(upwind[i][j] >= 0.0){
+                return 3.0 * (u[i][j-1] - u[i][j]) / (dx * dx) + (2.0 * uy[i][j] + uy[i][j-1]) / (dx);
+            }
+            return 3.0 * (u[i][j+1] - u[i][j]) / (dx * dx) + (2.0 * uy[i][j] + uy[i][j+1]) / (dx);
+        }
+  
+        template< typename T = double>
+        T cx(int i, int j, extendedArray<N + 1>& ux){
+            return ux[i][j];
+        }
 
-            namespace V{
-                template< typename T = double>
-                T a(int i, int j, extendedArray<T>& v, extendedArray<T>& gy){
-                    if(v(x(i), y(j)) >= 0.0){
-                        return (gy(i, j) + gy(i, j-1)) / (dy * dy) - 2.0 * (v(i, j) - v(i, j-1)) / (dy * dy * dy);
-                    }
-                    return (gy(i, j) + gy(i, j+1)) / (dy * dy) - 2.0 * (v(i, j) - v(i, j+1)) / (dy * dy * dy);
-                }
+        template< typename T = double>
+        T cy(int i, int j, extendedArray<N + 1>& uy){
+            return uy[i][j];
+        }
             
-                template< typename T = double>
-                T b(int i, int j, extendedArray<T>& v, extendedArray<T>& gy){
-                    if(v(x(i), y(j)) >= 0.0){
-                        return 3.0 * (v(i, j-1) - v(i, j)) / (dy * dy) + (2.0 * gy(i, j) + gy(i, j-1)) / (dy);
-                    }
-                    return 3.0 * (v(i, j+1) - v(i, j)) / (dy * dy) + (2.0 * gy(i, j) + gy(i, j+1)) / (dy);
-                }
-            
-                template< typename T = double>
-                T c(int i, int j, extendedArray<T>& g){
-                    return g(i, j);
-                }
-            
-                template< typename T = double>
-                T d(int i, int j, extendedArray<T>& u){
-                    return u(i, j);
-                }
-            }
+        template< typename T = double>
+        T d(int i, int j, extendedArray<N + 1>& u){
+            return u[i][j];
         }
     }
-*/
 
-/*
+
     template <typename T = double>
-    void succUUU(extendedArray<T>& u1, extendedArray<T>& ugx, extendedArray<T>& u2){
+    void succX(extendedArray<N + 1>& u1, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                if(u1(x(i), y(j)) >= 0){
-                    up = - u1(x(i), y(j)) * dt;
+                if(upwind[i][j] >= 0){
+                    up = - upwind[i][j] * dt;
                 }else{
-                    up = u1(x(i), y(j)) * dt;
+                    up = upwind[i][j] * dt;
                 }
-                u2(i, j) =   coeff::X::U::a(i, j, u1, ugx) * up * up * up 
-                           + coeff::X::U::b(i, j, u1, ugx) * up * up
-                           + coeff::X::U::c(i, j, ugx)     * up
-                           + coeff::X::U::d(i, j, u1);
+                u2[i][j] =   coeff::ax(i, j, u1, ux, upwind) * up * up * up 
+                           + coeff::bx(i, j, u1, ux, upwind) * up * up
+                           + coeff::cx(i, j, ux)             * up
+                           + coeff::d (i, j, u1);
             }
         }
     }
 
+    // ux1 -> ux2 / ux1 
     template <typename T = double>
-    void succUVU(extendedArray<T>& u1, extendedArray<T>& v1, extendedArray<T>& ugy, extendedArray<T>& u2){
+    void succGradX(extendedArray<N + 1>& u1, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                if(v1(x(i), y(j)) >= 0){
-                    up = - v1(x(i), y(j)) * dt;
+                if(upwind[i][j] >= 0){
+                    up = - upwind[i][j] * dt;
                 }else{
-                    up = v1(x(i), y(j)) * dt;
+                    up = upwind[i][j] * dt;
                 }
-                u2(i, j) =   coeff::Y::V::a(i, j, u1, v1, ugy) * up * up * up 
-                           + coeff::Y::V::b(i, j, u1, v1, ugy) * up * up
-                           + coeff::Y::V::c(i, j, ugy)     * up
-                           + coeff::Y::V::d(i, j, u1);
-            }
-        }
-    }
-
-    template <typename T = double>
-    void succVUV(extendedArray<T>& v1, extendedArray<T>& u1, extendedArray<T>& vgx, extendedArray<T>& v2){
-        T up;
-        for(int i=0; i<=N; ++i){
-            for(int j=0; j<=N; ++j){
-                if(u1(x(i), y(j)) >= 0){
-                    up = - v1(x(i), y(j)) * dt;
-                }else{
-                    up = v1(x(i), y(j)) * dt;
-                }
-                v2(i, j) =   coeff::X::U::a(i, j, u1, vgx) * up * up * up 
-                           + coeff::X::U::b(i, j, u1, vgx) * up * up
-                           + coeff::X::U::c(i, j, vgx)     * up
-                           + coeff::X::U::d(i, j, u1);
+                u2[i][j] =   3.0 * coeff::ax(i, j, u1, ux, upwind) * up * up
+                           + 2.0 * coeff::bx(i, j, u1, ux, upwind) * up
+                           +       coeff::cx(i, j, ux);
             }
         }
     }
     
     template <typename T = double>
-    void succVVV(extendedArray<T>& v1, extendedArray<T>& vgy, extendedArray<T>& v2){
+    void succY(extendedArray<N + 1>& u1, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                if(v1(x(i), y(j)) >= 0){
-                    up = - v1(x(i), y(j)) * dt;
+                if(upwind[i][j] >= 0){
+                    up = - upwind[i][j] * dt;
                 }else{
-                    up = v1(x(i), y(j)) * dt;
+                    up = upwind[i][j] * dt;
                 }
-                v2(i, j) =   coeff::Y::V::a(i, j, v1, vgy) * up * up * up 
-                           + coeff::Y::V::b(i, j, v1, vgy) * up * up
-                           + coeff::Y::V::c(i, j, vgy)     * up
-                           + coeff::Y::V::d(i, j, v1);
+                u2[i][j] =   coeff::ay(i, j, u1, uy, upwind) * up * up * up 
+                           + coeff::by(i, j, u1, uy, upwind) * up * up
+                           + coeff::cy(i, j, uy)             * up
+                           + coeff::d (i, j, u1);
             }
         }
     }
-*/
 
-/*
     template <typename T = double>
-    void succGX(extendedArray<T>& u, extendedArray<T>& gx1, extendedArray<T>& gx2){
+    void succGradY(extendedArray<N + 1>& u1, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                if(f(x(i), y(j)) >= 0){
-                    up = - f(x(i), y(j)) * dt;
+                if(upwind[i][j] >= 0){
+                    up = - upwind[i][j] * dt;
                 }else{
-                    up = f(x(i), y(j)) * dt;
+                    up = upwind[i][j] * dt;
                 }
-                gx2(i, j) =   3.0 * coeff::X::a(i, j, u, gx1) * up * up
-                            + 2.0 * coeff::X::b(i, j, u, gx1) * up
-                            +       coeff::X::c(i, j, gx1);
+                u2[i][j] =   3.0 * coeff::ay(i, j, u1, uy, upwind) * up * up
+                           + 2.0 * coeff::by(i, j, u1, uy, upwind) * up
+                                 + coeff::cy(i, j, uy);
             }
         }
     }
-    
+
     template <typename T = double>
-    void succGY(extendedArray<T>& u, extendedArray<T>& gy1, extendedArray<T>& gy2){
-        T up;
+    void diffusion(extendedArray<N + 1>& u1, extendedArray<N + 1>& u2){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                if(g(x(i), y(j)) >= 0){
-                    up = - g(x(i), y(j)) * dt;
-                }else{
-                    up = g(x(i), y(j)) * dt;
-                }
-                gy2(i, j) =   3.0 * coeff::Y::a(i, j, u, gy1) * up * up
-                            + 2.0 * coeff::Y::b(i, j, u, gy1) * up
-                            +       coeff::Y::c(i, j, gy1);
+                u2[i][j] = u2[i][j] + dt / Re * (u1[i-1][j] - 2.0 * u1[i][j] + u1[i+1][j]) / (dx * dx) 
+                                    + dt / Re * (u1[i][j-1] - 2.0 * u1[i][j] + u1[i][j+1]) / (dy * dy);
             }
         }
-    }   */
-/*
+    }
+
     template <typename T = double>
-    T speed(extendedArray<N + 1>& u, extendedArray<N + 1>& v, int i, int j){
+    T speed(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& v){
         return std::sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
     }
-*/
+
+    template <typename T = double>
+    void mean(extendedArray<N + 1>& f, extendedArray<N + 1> g, extendedArray<N + 1> fg){
+        for(int i=0; i<=N; ++i){
+            for(int j=0; j<=N; ++j){
+                fg[i][j] = 0.5 * (f[i][j] + g[i][j]);
+            }
+        }
+    }
 }
 
 
@@ -398,8 +289,17 @@ int main(){
     auto vy2 = mino2357::extendedArray<N + 1>{};
     auto vy3 = mino2357::extendedArray<N + 1>{};
 
+    mino2357::makeInitFuncU(u1);
+    mino2357::makeInitFuncV(v1);
+
+    mino2357::makeInitGradX(u1, ux1);
+    mino2357::makeInitGradY(u1, uy1);
+    
+    mino2357::makeInitGradX(v1, vx1);
+    mino2357::makeInitGradY(v1, vy1);
+
     /***********************************************/
-    /*
+    
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
     //fprintf(gp, "set pm3d map\n");
@@ -412,13 +312,13 @@ int main(){
     fprintf(gp, "splot '-' w l\n");
     for(int i=0; i<=N; i = i + plus){
         for(int j=0; j<=N; j = j + plus){
-            fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1(i, j));
+            fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1[i][j]);//mino2357::speed(i, j, u1, v1));
         }
         fprintf(gp, "\n");
     }
     fprintf(gp, "e\n");
     fflush(gp);
-    */
+    
     /******************************************************/
 
     std::cout << "Enter!" << std::endl;
@@ -428,12 +328,48 @@ int main(){
 
     for(int it=0; t<=tLimit; ++it){
         
-/*
+        //u
+        mino2357::succX(u1, ux1, u1, u2);
+        mino2357::succY(u2, uy1, v1, u3);
+        //mino2357::mean(u2, u3, u3);
+        mino2357::diffusion(u1, u3);
+
+        //v
+        mino2357::succX(v1, vx1, u1, v2);
+        mino2357::succY(v2, vy1, v1, v2);
+        //mino2357::mean(v2, v3, v3);
+        mino2357::diffusion(v1, v3);
+
+        //ux
+        mino2357::succGradX(ux1, ux1, u1, ux2);
+        mino2357::succGradY(ux2, ux1, v1, ux3);
+
+        //uy
+        mino2357::succGradX(vx1, uy1, u1, vx2);
+        mino2357::succGradY(vx2, uy1, v1, vx3);
+        
+        //vx
+        mino2357::succGradX(uy1, vx1, u1, uy2);
+        mino2357::succGradY(uy2, vx1, v1, uy3);
+
+        //vy
+        mino2357::succGradX(vy1, vy1, u1, vy2);
+        mino2357::succGradY(vy2, vy1, v1, vy3);
+
+        for(int i=0; i<=N; ++i){
+            for(int j=0; j<=N; ++j){
+                ux3[i][j] = ux3[i][j] - dt * (ux1[i][j] * ux1[i][j] + vx1[i][j] * uy1[i][j]);
+                uy3[i][j] = uy3[i][j] - dt * (uy1[i][j] * ux1[i][j] + vy1[i][j] * uy1[i][j]);
+                vx3[i][j] = vx3[i][j] - dt * (ux1[i][j] * vx1[i][j] + vx1[i][j] * vy1[i][j]);
+                vy3[i][j] = vy3[i][j] - dt * (uy1[i][j] * vx1[i][j] + vy1[i][j] * vy1[i][j]);
+            }
+        }
+
         if(it%INTV == 0){
             fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; i = i + plus){
                 for(int j=0; j<=N; j = j + plus){
-                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1(i, j));
+                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u3(i, j));
                 }
                 fprintf(gp, "\n");
             }
@@ -441,14 +377,26 @@ int main(){
             fflush(gp);
         }
 
+        for(int i=0; i<=N; ++i){
+            for(int j=0; j<=N; ++j){
+                 u1[i][j] =  u3[i][j];
+                 v1[i][j] =  v3[i][j];
+                ux1[i][j] = ux3[i][j];
+                uy1[i][j] = uy3[i][j];
+                vx1[i][j] = vx3[i][j];
+                vy1[i][j] = vy3[i][j];
+            }
+        }
+
         t += dt;
-    */
+    
     }
-    /*
+
+ 
     fprintf(gp, "splot '-' w l\n");
     for(int i=0; i<=N; i = i + plus){
       	for(int j=0; j<=N; j = j + plus){
-           	fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1(i, j));
+           	fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u1[i][j]);
       	}
        	fprintf(gp, "\n");
  	}
@@ -458,6 +406,5 @@ int main(){
 	std::cout << "simulation done.(mean)" << std::endl;
 	getchar();
 
-    pclose(gp);
-    */  
+    pclose(gp); 
 }
