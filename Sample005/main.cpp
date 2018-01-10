@@ -10,7 +10,7 @@
 #include <cmath>
 #include <array>
 
-constexpr int N = 64;
+constexpr int N = 256;
 constexpr double Re = 100.0;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
@@ -18,14 +18,14 @@ constexpr double xstart = - 1.0;
 constexpr double ystart = - 1.0;
 constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
-constexpr double dt = 0.0001;
+constexpr double dt = 0.00001;
 constexpr double pi = 3.14159265358979323846264338327950288;
 constexpr double tLimit = 20000.0 * pi;
 constexpr int INTV = 100;
-constexpr int plus = 2;
+constexpr int plus = 8;
 
-namespace mino2357{
-    namespace utility{
+namespace rittai3d{
+	namespace utility{
 		// [ minimum, maximum ) の範囲でラップアラウンド
 		template <typename T>
 		constexpr T wrap_around( T value, T minimum, T maximum )
@@ -34,54 +34,50 @@ namespace mino2357{
 			return n >= 0 ? ( n + minimum ) : ( n + maximum ); 
 		}
 	}
-	
-    template <std::size_t N, typename T = double>
-    class extendedArray{
-	
-		std::array< std::array< T, N >, N > arr_;
-	
-    public:
-        constexpr extendedArray() : arr_() {
-        }
-		
-        ~extendedArray() = default;
+}
 
-		auto& operator[]( int i ) {
-			i = utility::wrap_around( i, 0, static_cast< int >( N ) );
-			return arr_[i];
+namespace sksat {
+	template<std::size_t NN, typename T = double>
+	class array_wrapper {
+	private:
+		std::array<T,NN> arr;
+	public:
+		constexpr array_wrapper() : arr() {}
+		~array_wrapper() = default;
+
+		T& operator[](int i){
+			i = rittai3d::utility::wrap_around(i,0,static_cast<int>(NN));
+			return arr[i];
 		}
-		
-		constexpr T& operator()(int i, int j) {
-            i = utility::wrap_around( i, 0, static_cast< int >( N ) );
-			j = utility::wrap_around( j, 0, static_cast< int >( N ) );
-            return arr_[ i ][ j ];
-		}
-    };
+	};
+}
+
+namespace mino2357{
     
     template <typename T = double>
-    void makeInitFuncU(extendedArray<N + 1>& u){
+    void makeInitFuncU(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u){
         T x, y;
-        T a = 0.4; T b = 0.4;
+        T a = 0.0; T b = 0.0;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 x = xstart + i * dx;
                 y = ystart + j * dy;
                 
-                if(x >= 0.2 && x <= 0.6 && y >= 0.2 && y <= 0.6){
+                if(x >= 0.0 && x <= 0.4 && y >= 0.0 && y <= 0.4){
                     u[i][j] = 1.0;
                 }else{
                     u[i][j] = 0.0;
                 }
                 
-               // u[i][j] = 0;//0.1 * (std::sin(pi * (x + y)));// + std::sin(pi * (y));
-                       //1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+               u[i][j] = 0.1 * (std::sin(pi * (x)));// + std::sin(pi * (y));
+                       //0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
                 
             } 
         }
     }
 
     template <typename T = double>
-    void makeInitFuncV(extendedArray<N + 1>& v){
+    void makeInitFuncV(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& v){
         
         T x, y;
         T a = 0.0; T b = 0.0;
@@ -90,20 +86,20 @@ namespace mino2357{
                 x = xstart + i * dx;
                 y = ystart + j * dy;
               
-                if(x >= 0.2 && x <= 0.6 && y >= 0.2 && y <= 0.6){
+                if(x >= 0.0 && x <= 0.4 && y >= 0.0 && y <= 0.4){
                     v[i][j] = 1.0;
                 }else{
                     v[i][j] = 0.0;
                 }
                 
-                //v[i][j] = 0.1 * std::sin(pi * (x));
-                        //0.3 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                v[i][j] = 0;//0.1 * std::sin(pi * (x));
+                       //0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
             }
         }
     }
 
     template <typename T = double>
-    void makeInitGradX(extendedArray<N + 1>& f, extendedArray<N + 1>& fx){
+    void makeInitGradX(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& f, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& fx){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 fx[i][j] = (f[i+1][j] - f[i-1][j]) / (2.0 * dx);
@@ -112,7 +108,7 @@ namespace mino2357{
     }
 
     template <typename T = double>
-    void makeInitGradY(extendedArray<N + 1>& g, extendedArray<N + 1>& gy){
+    void makeInitGradY(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& g, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& gy){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 gy[i][j] = (g[i][j+1] - g[i][j-1]) / (2.0 * dy);
@@ -122,7 +118,7 @@ namespace mino2357{
 
     namespace coeff{
         template< typename T = double>
-        T ax(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind){
+        T ax(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& ux, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind){
             if(upwind[i][j] >= 0.0){
                 return (ux[i][j] + ux[i-1][j]) / (dx * dx) - 2.0 * (u[i][j] - u[i-1][j]) / (dx * dx * dx);
             }
@@ -130,7 +126,7 @@ namespace mino2357{
         }
 
         template< typename T = double>
-        T ay(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind){
+        T ay(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& uy, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind){
             if(upwind[i][j] >= 0.0){
                 return (uy[i][j] + uy[i][j-1]) / (dy * dy) - 2.0 * (u[i][j] - u[i][j-1]) / (dy * dy * dy);
             }
@@ -138,7 +134,7 @@ namespace mino2357{
         }
   
         template< typename T = double>
-        T bx(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind){
+        T bx(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& ux, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind){
             if(upwind[i][j] >= 0.0){
                 return 3.0 * (u[i-1][j] - u[i][j]) / (dx * dx) + (2.0 * ux[i][j] + ux[i-1][j]) / (dx);
             }
@@ -146,7 +142,7 @@ namespace mino2357{
         }
         
         template< typename T = double>
-        T by(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind){
+        T by(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& uy, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind){
             if(upwind[i][j] >= 0.0){
                 return 3.0 * (u[i][j-1] - u[i][j]) / (dy * dy) + (2.0 * uy[i][j] + uy[i][j-1]) / (dy);
             }
@@ -154,24 +150,24 @@ namespace mino2357{
         }
   
         template< typename T = double>
-        T cx(int i, int j, extendedArray<N + 1>& ux){
+        T cx(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& ux){
             return ux[i][j];
         }
 
         template< typename T = double>
-        T cy(int i, int j, extendedArray<N + 1>& uy){
+        T cy(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& uy){
             return uy[i][j];
         }
             
         template< typename T = double>
-        T d(int i, int j, extendedArray<N + 1>& u){
+        T d(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u){
             return u[i][j];
         }
     }
 
 
     template <typename T = double>
-    void succX(extendedArray<N + 1>& u1, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
+    void succX(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u1, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& ux, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
@@ -189,7 +185,7 @@ namespace mino2357{
     }
 
     template <typename T = double>
-    void succY(extendedArray<N + 1>& u1, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
+    void succY(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u1, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& uy, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
@@ -208,7 +204,7 @@ namespace mino2357{
 
     // ux1 -> ux2 / ux1 
     template <typename T = double>
-    void succGradX(extendedArray<N + 1>& u1, extendedArray<N + 1>& ux, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
+    void succGradX(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u1, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& ux, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
@@ -226,7 +222,7 @@ namespace mino2357{
 
     
     template <typename T = double>
-    void succGradY(extendedArray<N + 1>& u1, extendedArray<N + 1>& uy, extendedArray<N + 1>& upwind, extendedArray<N + 1>& u2){
+    void succGradY(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u1, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& uy, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& upwind, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u2){
         T up;
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
@@ -243,7 +239,7 @@ namespace mino2357{
     }
 
     template <typename T = double>
-    void diffusion(extendedArray<N + 1>& u1, extendedArray<N + 1>& u2){
+    void diffusion(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u1, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u2){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 u2[i][j] = u1[i][j] + dt / Re * (u1[i-1][j] - 2.0 * u1[i][j] + u1[i+1][j]) / (dx * dx) 
@@ -253,12 +249,12 @@ namespace mino2357{
     }
 
     template <typename T = double>
-    T speed(int i, int j, extendedArray<N + 1>& u, extendedArray<N + 1>& v){
+    T speed(int i, int j, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& u, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& v){
         return std::sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
     }
 
     template <typename T = double>
-    void mean(extendedArray<N + 1>& f, extendedArray<N + 1> g, extendedArray<N + 1> fg){
+    void mean(sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& f, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& g, sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>& fg){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 fg[i][j] = 0.5 * (f[i][j] + g[i][j]);
@@ -275,32 +271,32 @@ int e(int i){
 
 int main(){
 
-    auto u1  = mino2357::extendedArray<N + 1>{};
-    auto u2  = mino2357::extendedArray<N + 1>{};
-    auto u3  = mino2357::extendedArray<N + 1>{};
-    auto u4  = mino2357::extendedArray<N + 1>{};
-    auto ux1 = mino2357::extendedArray<N + 1>{};
-    auto ux2 = mino2357::extendedArray<N + 1>{};
-    auto ux3 = mino2357::extendedArray<N + 1>{};
-    auto ux4 = mino2357::extendedArray<N + 1>{};
-    auto uy1 = mino2357::extendedArray<N + 1>{};
-    auto uy2 = mino2357::extendedArray<N + 1>{};
-    auto uy3 = mino2357::extendedArray<N + 1>{};
-    auto uy4 = mino2357::extendedArray<N + 1>{};
+    auto u1  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto u2  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto u3  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto u4  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto ux1 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto ux2 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto ux3 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto ux4 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto uy1 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto uy2 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto uy3 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto uy4 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
 
-    auto v1  = mino2357::extendedArray<N + 1>{};
-    auto v2  = mino2357::extendedArray<N + 1>{};
-    auto v3  = mino2357::extendedArray<N + 1>{};
-    auto v4  = mino2357::extendedArray<N + 1>{};
-    auto vx1 = mino2357::extendedArray<N + 1>{};
-    auto vx2 = mino2357::extendedArray<N + 1>{};
-    auto vx3 = mino2357::extendedArray<N + 1>{};
-    auto vx4 = mino2357::extendedArray<N + 1>{};
-    auto vy1 = mino2357::extendedArray<N + 1>{};
-    auto vy2 = mino2357::extendedArray<N + 1>{};
-    auto vy3 = mino2357::extendedArray<N + 1>{};
-    auto vy4 = mino2357::extendedArray<N + 1>{};
-
+    auto v1  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto v2  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto v3  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto v4  = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vx1 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vx2 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vx3 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vx4 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vy1 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vy2 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vy3 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    auto vy4 = sksat::array_wrapper<N+1,sksat::array_wrapper<N + 1>>{};
+    
     mino2357::makeInitFuncU(u1);
     mino2357::makeInitFuncV(v1);
 
@@ -310,11 +306,14 @@ int main(){
     mino2357::makeInitGradX(v1, vx1);
     mino2357::makeInitGradY(v1, vy1);
 
+    std::cout << dt * (dx * dx * Re) << std::endl;
+    std::cout << dt / dx << std::endl;
+
     /***********************************************/
     
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
-    fprintf(gp, "set pm3d map\n");
+    //fprintf(gp, "set pm3d map\n");
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
     fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
@@ -373,18 +372,18 @@ int main(){
             for(int j=0; j<=N; ++j){
                 ux4[i][j] = ux3[i][j]
                             + dt / Re * (ux3[i-1][j] - 2.0 * ux3[i][j] + ux3[i+1][j]/(dx * dx))
-                            + dt / Re * (uy3[e(i-1)][e(j-1)] + uy3[e(i+1)][e(j+1)] - uy3[e(i-1)][e(j+1)] - uy3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            + dt / Re * (uy3[i-1][j-1] + uy3[i+1][j+1] - uy3[i-1][j+1] - uy3[i+1][j-1])/(4.0 * dx * dy)
                             - dt * (ux3[i][j] * ux3[i][j] + vx3[i][j] * uy3[i][j]);
-                uy4[i][j] = uy3[i][j] 
-                            + dt / Re * (ux3[e(i-1)][e(j-1)] + ux3[e(i+1)][e(j+1)] - ux3[e(i-1)][e(j+1)] - ux3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                uy4[i][j] = uy3[i][j]
+                            + dt / Re * (ux3[i-1][j-1] + ux3[i+1][+1] - ux3[i-1][j+1] - ux3[i+1][j-1])/(4.0 * dx * dy)
                             + dt / Re * (uy3[i][j-1] - 2.0 * uy3[i][j] + uy3[i][j+1]/(dy * dy))
                             - dt * (uy3[i][j] * ux3[i][j] + vy3[i][j] * uy3[i][j]);
-                vx4[i][j] = vx3[i][j] 
+                vx4[i][j] = vx3[i][j]
                             + dt / Re * (vx3[i-1][j] - 2.0 * vx3[i][j] + vx3[i+1][j]/(dx * dx))
-                            + dt / Re * (vy3[e(i-1)][e(j-1)] + vy3[e(i+1)][e(j+1)] - vy3[e(i-1)][e(j+1)] - vy3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            + dt / Re * (vy3[i-1][j-1] + vy3[i+1][j+1] - vy3[i-1][j+1] - vy3[i+1][j-1])/(4.0 * dx * dy)
                             - dt * (ux3[i][j] * vx3[i][j] + vx3[i][j] * vy3[i][j]);
-                vy4[i][j] = vy3[i][j] 
-                            + dt / Re * (vx3[e(i-1)][e(j-1)] + vx3[e(i+1)][e(j+1)] - vx3[e(i-1)][e(j+1)] - vx3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                vy4[i][j] = vy3[i][j]
+                            + dt / Re * (vx3[i-1][j-1] + vx3[i+1][j+1] - vx3[i-1][j+1] - vx3[i+1][j-1])/(4.0 * dx * dy)
                             + dt / Re * (vy3[i][j-1] - 2.0 * vy3[i][j] + vy3[i][j+1]/(dy * dy))
                             - dt * (uy3[i][j] * vx3[i][j] + vy3[i][j] * vy3[i][j]);
             }
@@ -394,8 +393,8 @@ int main(){
             fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; i = i + plus){
                 for(int j=0; j<=N; j = j + plus){
-                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
-                    //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u4[i][j]);
+                    //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
+                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u4[i][j]);
                 }
                 fprintf(gp, "\n");
             }
