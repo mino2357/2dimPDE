@@ -10,8 +10,8 @@
 #include <cmath>
 #include <array>
 
-constexpr int N = 256;
-constexpr double Re = 1000.0;
+constexpr int N = 64;
+constexpr double Re = 100.0;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
 constexpr double xstart = - 1.0;
@@ -22,7 +22,7 @@ constexpr double dt = 0.0001;
 constexpr double pi = 3.14159265358979323846264338327950288;
 constexpr double tLimit = 20000.0 * pi;
 constexpr int INTV = 100;
-constexpr int plus = 4;
+constexpr int plus = 2;
 
 namespace mino2357{
     namespace utility{
@@ -73,8 +73,8 @@ namespace mino2357{
                     u[i][j] = 0.0;
                 }
                 
-                u[i][j] =// (std::sin(pi * x));// + std::sin(pi * (y));
-                       0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+               // u[i][j] = 0;//0.1 * (std::sin(pi * (x + y)));// + std::sin(pi * (y));
+                       //1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
                 
             } 
         }
@@ -89,14 +89,14 @@ namespace mino2357{
             for(int j=0; j<=N; ++j){
                 x = xstart + i * dx;
                 y = ystart + j * dy;
-              /*
-                if(xstart+i*dx >= 0.2 && xstart+i*dx <= 0.6 && ystart+j*dy >= 0.2 && ystart+j*dy <= 0.6){
+              
+                if(x >= 0.2 && x <= 0.6 && y >= 0.2 && y <= 0.6){
                     v[i][j] = 1.0;
                 }else{
                     v[i][j] = 0.0;
                 }
-                */
-                v[i][j] = 0;//0.1 * std::sin(pi * (x));
+                
+                //v[i][j] = 0.1 * std::sin(pi * (x));
                         //0.3 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
             }
         }
@@ -278,22 +278,28 @@ int main(){
     auto u1  = mino2357::extendedArray<N + 1>{};
     auto u2  = mino2357::extendedArray<N + 1>{};
     auto u3  = mino2357::extendedArray<N + 1>{};
+    auto u4  = mino2357::extendedArray<N + 1>{};
     auto ux1 = mino2357::extendedArray<N + 1>{};
     auto ux2 = mino2357::extendedArray<N + 1>{};
     auto ux3 = mino2357::extendedArray<N + 1>{};
+    auto ux4 = mino2357::extendedArray<N + 1>{};
     auto uy1 = mino2357::extendedArray<N + 1>{};
     auto uy2 = mino2357::extendedArray<N + 1>{};
     auto uy3 = mino2357::extendedArray<N + 1>{};
+    auto uy4 = mino2357::extendedArray<N + 1>{};
 
     auto v1  = mino2357::extendedArray<N + 1>{};
     auto v2  = mino2357::extendedArray<N + 1>{};
     auto v3  = mino2357::extendedArray<N + 1>{};
+    auto v4  = mino2357::extendedArray<N + 1>{};
     auto vx1 = mino2357::extendedArray<N + 1>{};
     auto vx2 = mino2357::extendedArray<N + 1>{};
     auto vx3 = mino2357::extendedArray<N + 1>{};
+    auto vx4 = mino2357::extendedArray<N + 1>{};
     auto vy1 = mino2357::extendedArray<N + 1>{};
     auto vy2 = mino2357::extendedArray<N + 1>{};
     auto vy3 = mino2357::extendedArray<N + 1>{};
+    auto vy4 = mino2357::extendedArray<N + 1>{};
 
     mino2357::makeInitFuncU(u1);
     mino2357::makeInitFuncV(v1);
@@ -308,7 +314,7 @@ int main(){
     
     FILE* gp = popen("gnuplot -persist", "w");
     fprintf(gp, "set pm3d\n");
-    //fprintf(gp, "set pm3d map\n");
+    fprintf(gp, "set pm3d map\n");
     fprintf(gp, "set contour\n");
     fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
     fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
@@ -339,44 +345,48 @@ int main(){
         mino2357::succX(u1, ux1, u1, u2);
         mino2357::succY(u2, uy1, v1, u3);
         //mino2357::mean(u2, u3, u3);
-        //mino2357::diffusion(u1, u3);
+        mino2357::diffusion(u3, u4);
 
         //v
         mino2357::succX(v1, vx1, u1, v2);
         mino2357::succY(v2, vy1, v1, v3);
         //mino2357::mean(v2, v3, v3);
-        //mino2357::diffusion(v1, v3);
+        mino2357::diffusion(v3, v4);
 
         //ux
         mino2357::succGradX(u1, ux1, u1, ux2);
+        mino2357::succGradY(u1, ux2, v1, ux3);
 
         //uy
-        mino2357::succGradY(u1, uy1, v1, uy2);
+        mino2357::succGradX(u1, uy1, u1, uy2);
+        mino2357::succGradY(u1, uy2, v1, uy3);
         
         //vx
         mino2357::succGradX(v1, vx1, u1, vx2);
+        mino2357::succGradY(v1, vx2, v1, vx3);
 
         //vy
-        mino2357::succGradY(v1, vy1, v1, vy2);
+        mino2357::succGradX(v1, vy1, u1, vy2);
+        mino2357::succGradY(v1, vy2, v1, vy3);
 
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                ux3[i][j] = ux2[i][j]
-                            + dt / Re * (ux2[i-1][j] - 2.0 * ux2[i][j] + ux2[i+1][j]/(dx * dx))
-                            + dt / Re * (uy2[e(i-1)][e(j-1)] + uy2[e(i+1)][e(j+1)] - uy2[e(i-1)][e(j+1)] - uy2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
-                            - dt * (ux2[i][j] * ux2[i][j] + vx2[i][j] * uy2[i][j]);
-                uy3[i][j] = uy2[i][j] 
-                            + dt / Re * (ux2[e(i-1)][e(j-1)] + ux2[e(i+1)][e(j+1)] - ux2[e(i-1)][e(j+1)] - ux2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
-                            + dt / Re * (uy2[i][j-1] - 2.0 * uy2[i][j] + uy2[i][j+1]/(dy * dy))
-                            - dt * (uy2[i][j] * ux2[i][j] + vy2[i][j] * uy2[i][j]);
-                vx3[i][j] = vx2[i][j] 
-                            + dt / Re * (vx2[i-1][j] - 2.0 * vx2[i][j] + vx2[i+1][j]/(dx * dx))
-                            + dt / Re * (vy2[e(i-1)][e(j-1)] + vy2[e(i+1)][e(j+1)] - vy2[e(i-1)][e(j+1)] - vy2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
-                            - dt * (ux2[i][j] * vx2[i][j] + vx2[i][j] * vy2[i][j]);
-                vy3[i][j] = vy2[i][j] 
-                            + dt / Re * (vx2[e(i-1)][e(j-1)] + vx2[e(i+1)][e(j+1)] - vx2[e(i-1)][e(j+1)] - vx2[e(i+1)][e(j-1)])/(4.0 * dx * dy)
-                            + dt / Re * (vy2[i][j-1] - 2.0 * vy2[i][j] + vy2[i][j+1]/(dy * dy))
-                            - dt * (uy2[i][j] * vx2[i][j] + vy2[i][j] * vy2[i][j]);
+                ux4[i][j] = ux3[i][j]
+                            + dt / Re * (ux3[i-1][j] - 2.0 * ux3[i][j] + ux3[i+1][j]/(dx * dx))
+                            + dt / Re * (uy3[e(i-1)][e(j-1)] + uy3[e(i+1)][e(j+1)] - uy3[e(i-1)][e(j+1)] - uy3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            - dt * (ux3[i][j] * ux3[i][j] + vx3[i][j] * uy3[i][j]);
+                uy4[i][j] = uy3[i][j] 
+                            + dt / Re * (ux3[e(i-1)][e(j-1)] + ux3[e(i+1)][e(j+1)] - ux3[e(i-1)][e(j+1)] - ux3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            + dt / Re * (uy3[i][j-1] - 2.0 * uy3[i][j] + uy3[i][j+1]/(dy * dy))
+                            - dt * (uy3[i][j] * ux3[i][j] + vy3[i][j] * uy3[i][j]);
+                vx4[i][j] = vx3[i][j] 
+                            + dt / Re * (vx3[i-1][j] - 2.0 * vx3[i][j] + vx3[i+1][j]/(dx * dx))
+                            + dt / Re * (vy3[e(i-1)][e(j-1)] + vy3[e(i+1)][e(j+1)] - vy3[e(i-1)][e(j+1)] - vy3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            - dt * (ux3[i][j] * vx3[i][j] + vx3[i][j] * vy3[i][j]);
+                vy4[i][j] = vy3[i][j] 
+                            + dt / Re * (vx3[e(i-1)][e(j-1)] + vx3[e(i+1)][e(j+1)] - vx3[e(i-1)][e(j+1)] - vx3[e(i+1)][e(j-1)])/(4.0 * dx * dy)
+                            + dt / Re * (vy3[i][j-1] - 2.0 * vy3[i][j] + vy3[i][j+1]/(dy * dy))
+                            - dt * (uy3[i][j] * vx3[i][j] + vy3[i][j] * vy3[i][j]);
             }
         }
 
@@ -384,8 +394,8 @@ int main(){
             fprintf(gp, "splot '-' w l\n");
             for(int i=0; i<=N; i = i + plus){
                 for(int j=0; j<=N; j = j + plus){
-                    //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
-                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u3[i][j]);
+                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
+                    //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u4[i][j]);
                 }
                 fprintf(gp, "\n");
             }
@@ -395,12 +405,12 @@ int main(){
 
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                 u1[i][j] =  u3[i][j];
-                 v1[i][j] =  v3[i][j];
-                ux1[i][j] = ux3[i][j];
-                uy1[i][j] = uy3[i][j];
-                vx1[i][j] = vx3[i][j];
-                vy1[i][j] = vy3[i][j];
+                 u1[i][j] =  u4[i][j];
+                 v1[i][j] =  v4[i][j];
+                ux1[i][j] = ux4[i][j];
+                uy1[i][j] = uy4[i][j];
+                vx1[i][j] = vx4[i][j];
+                vy1[i][j] = vy4[i][j];
             }
         }
         t += dt;
