@@ -10,7 +10,7 @@
 #include <cmath>
 #include <array>
 
-constexpr int N = 256;
+constexpr int N = 128;
 constexpr double Re = 100.0;
 constexpr double Lx =  2.0;
 constexpr double Ly =  2.0;
@@ -18,11 +18,11 @@ constexpr double xstart = - 1.0;
 constexpr double ystart = - 1.0;
 constexpr double dx = Lx / N;
 constexpr double dy = Ly / N;
-constexpr double dt = 0.00001;
+constexpr double dt = 0.0001;
 constexpr double pi = 3.14159265358979323846264338327950288;
 constexpr double tLimit = 20000.0 * pi;
 constexpr int INTV = 100;
-constexpr int plus = 8;
+constexpr int plus = 4;
 
 namespace rittai3d{
 	namespace utility{
@@ -69,8 +69,8 @@ namespace mino2357{
                     u[i][j] = 0.0;
                 }
                 
-               u[i][j] = 0.1 * (std::sin(pi * (x)));// + std::sin(pi * (y));
-                       //0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+               u[i][j] = //.1 * (std::sin(pi * (x)));// + std::sin(pi * (y));
+                       0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
                 
             } 
         }
@@ -92,8 +92,8 @@ namespace mino2357{
                     v[i][j] = 0.0;
                 }
                 
-                v[i][j] = 0;//0.1 * std::sin(pi * (x));
-                       //0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                v[i][j] = //0;//0.1 * std::sin(pi * (x));
+                       0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
             }
         }
     }
@@ -394,7 +394,7 @@ int main(){
             for(int i=0; i<=N; i = i + plus){
                 for(int j=0; j<=N; j = j + plus){
                     //fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, mino2357::speed(i, j, u3, v3));
-                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, u4[i][j]);
+                    fprintf(gp, "%f %f %f\n", xstart + i * dx, ystart + j * dy, vx4[i][j]);
                 }
                 fprintf(gp, "\n");
             }
