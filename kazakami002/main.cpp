@@ -69,6 +69,28 @@ namespace mino2357{
                     f[i][j] = 0.0;
                 }
                 
+               f[i][j] = (std::sin(pi * (x + y)));// + std::sin(pi * (y));
+                       //0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
+                
+            } 
+        }
+    }
+    
+    template <typename T = double>
+    void makeInitFuncG(extendedArray& g){
+        T x, y;
+        //T a = 0.0; T b = 0.0;
+        for(int i=0; i<=N; ++i){
+            for(int j=0; j<=N; ++j){
+                x = xstart + i * dx;
+                y = ystart + j * dy;
+                
+                if(x >= 0.2 && x <= 0.6 && y >= 0.2 && y <= 0.6){
+                    g[i][j] = 1.0;
+                }else{
+                    g[i][j] = 0.0;
+                }
+                
                //f[i][j] = //.1 * (std::sin(pi * (x)));// + std::sin(pi * (y));
                        //0.1 * std::exp(- 20.0 * (std::pow(x - a, 2) + std::pow(y - b, 2)));
                 
@@ -85,7 +107,7 @@ namespace mino2357{
         gnuplot(){
             gp = popen("gnuplot -persist", "w");
             fprintf(gp, "set pm3d\n");
-            fprintf(gp, "set pm3d map\n");
+            //fprintf(gp, "set pm3d map\n");
             fprintf(gp, "set contour\n");
             fprintf(gp, "set xr [%f:%f]\n", xstart, xstart + Lx);
             fprintf(gp, "set yr [%f:%f]\n", ystart, ystart + Ly);
@@ -109,37 +131,21 @@ namespace mino2357{
     };
 
     template <typename T = double>
-    T alpha(T x, T y){
-        return - y;
-        return x;
-    }
-    
-    template <typename T = double>
-    T beta(T x, T y){
-        return x;
-        return y;
-    }
-
-    template <typename T = double>
-    void succ(extendedArray& f1, extendedArray& f2){
-        T x, y;
+    void succ(extendedArray& f1, extendedArray& g1,extendedArray& f2){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
-                x = xstart + i * dx;
-                y = ystart + j * dy;
-
-                if(alpha(x,y) >= 0.0 && beta(x,y) >= 0.0){
-                    f2[i][j] = f1[i][j] - alpha(x,y) * dt * (f1[i][j] - f1[i-1][j]) / dx
-                                        - beta(x,y)  * dt * (f1[i][j] - f1[i][j-1]) / dy;
-                }else if(alpha(x,y) < 0.0 && beta(x,y) >= 0.0){
-                    f2[i][j] = f1[i][j] + alpha(x,y) * dt * (f1[i][j] - f1[i+1][j]) / dx
-                                        - beta(x,y)  * dt * (f1[i][j] - f1[i][j-1]) / dy;
-                }else if(alpha(x,y) >= 0.0 && beta(x,y) < 0.0){
-                    f2[i][j] = f1[i][j] - alpha(x,y) * dt * (f1[i][j] - f1[i-1][j]) / dx
-                                        + beta(x,y)  * dt * (f1[i][j] - f1[i][j+1]) / dy;
+                if(f1[i][j] >= 0.0 && g1[i][j] >= 0.0){
+                    f2[i][j] = f1[i][j] - f1[i][j] * dt * (f1[i][j] - f1[i-1][j]) / dx
+                                        - g1[i][j] * dt * (f1[i][j] - f1[i][j-1]) / dy;
+                }else if(f1[i][j] < 0.0 && g1[i][j] >= 0.0){
+                    f2[i][j] = f1[i][j] + f1[i][j] * dt * (f1[i][j] - f1[i+1][j]) / dx
+                                        - g1[i][j] * dt * (f1[i][j] - f1[i][j-1]) / dy;
+                }else if(f1[i][j] >= 0.0 && g1[i][j] < 0.0){
+                    f2[i][j] = f1[i][j] - f1[i][j] * dt * (f1[i][j] - f1[i-1][j]) / dx
+                                        + g1[i][j] * dt * (f1[i][j] - f1[i][j+1]) / dy;
                 }else{
-                    f2[i][j] = f1[i][j] + alpha(x,y) * dt * (f1[i][j] - f1[i+1][j]) / dx
-                                        + beta(x,y)  * dt * (f1[i][j] - f1[i][j+1]) / dy;
+                    f2[i][j] = f1[i][j] + f1[i][j] * dt * (f1[i][j] - f1[i+1][j]) / dx
+                                        + g1[i][j] * dt * (f1[i][j] - f1[i][j+1]) / dy;
                 }
             }
         }
@@ -153,7 +159,11 @@ int main(){
     auto f1 = extendedArray{};
     auto f2 = extendedArray{};
     
+    auto g1 = extendedArray{};
+    auto g2 = extendedArray{};
+    
     mino2357::makeInitFuncF(f1);
+    mino2357::makeInitFuncG(g1);
 
     std::cout << dt / dx << std::endl;
 
@@ -168,7 +178,8 @@ int main(){
 
     for(int it=0; t<=tLimit; ++it){
 
-        mino2357::succ(f1, f2);
+        mino2357::succ(f1, g1, f2);
+        mino2357::succ(g1, f1, g2);
 
         if(it%INTV == 0){
             gp.print(f2);
@@ -177,6 +188,7 @@ int main(){
         for(int i=0; i<=N; ++i){
             for(int j=0; j<=N; ++j){
                 f1[i][j] = f2[i][j];
+                g1[i][j] = g2[i][j];
             }
         }
         t += dt;
