@@ -142,13 +142,9 @@ namespace mino2357{
 
 
 int main(){
-	std::cout << __LINE__ << std::endl;
     auto f1 = extendedArray{};
-	std::cout << __LINE__ << std::endl;
     auto f2 = extendedArray{};
-	std::cout << __LINE__ << std::endl;
     auto f3 = extendedArray{};
-	std::cout << __LINE__ << std::endl;
     
     auto g1 = extendedArray{};
     auto g2 = extendedArray{};
@@ -177,9 +173,9 @@ int main(){
     getchar();
 
     double t = 0.0;
+	int Lim = 10;
 
 	p1[1][1] = 1.0;
-	int Lim = 100;
 
     for(int it=0; t<=tLimit; ++it){
 
@@ -190,7 +186,7 @@ int main(){
        
 		dp1[0][0] = 0.0;
         for(int k=0; ; k++){
-            for(int i=1; i<N; ++i){
+			for(int i=1; i<N; ++i){
                 for(int j=1; j<N; ++j){
                     R[i][j] = ((f2[i+1][j] - f2[i-1][j]) / (2.0 * dx) + (g2[i][j+1] - g2[i][j-1]) / (2.0 * dy)) / dt;
                     R[i][j] = R[i][j] * dx * dx * dy * dy;
@@ -213,23 +209,10 @@ int main(){
                 	}
             	}
 			}
-            if(k > 1 && (k%Lim) == 0 && err < (Tol * N * N)){
+            if((k > 1 && (k%Lim) == 0 && err < (Tol * N * N))){
 				itr = k;
-				if(t > 5.0){
-					Lim = 10;
-				}
-				if(t > 20.0){
-					Lim = 1;
-					Tol = 10e-9;
-				}
-				if(t > 30.0){
-					Tol = 10e-8;
-				}
-				if(t > 40.0){
-					Tol = 10e-6;
-				}
-				if(t > 50.0){
-					Tol = 10e-5;
+				if(t > 10.0){
+					Lim = 2;
 				}
 				break;
             }
