@@ -1,7 +1,7 @@
 #pragma once
 
 constexpr int N = 500;
-constexpr double Re = 1000;
+constexpr double Re = 2000;
 constexpr double Lx =  1.0;
 constexpr double Ly =  1.0;
 constexpr double xstart = 0.0;

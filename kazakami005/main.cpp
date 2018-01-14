@@ -211,8 +211,8 @@ int main(){
 			}
             if((k > 1 && (k%Lim) == 0 && err < (Tol * N * N))){
 				itr = k;
-				if(t > 10.0){
-					Lim = 2;
+				if(t > 0.1){
+					Lim = 1;
 				}
 				break;
             }
