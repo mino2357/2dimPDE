@@ -183,7 +183,7 @@ namespace mino2357{
 
 
 int main(){
-    std::cout << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 - 5);
+    std::cout << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 - 8);
 
     auto f1 = extendedArray{};
     auto f2 = extendedArray{};
@@ -245,7 +245,8 @@ int main(){
             //gp.vectorWithSpeed(f3, g3);
             //gp.vectorWithSpeedLog10(f3, g3);
             //gp.vectorWithLog10P(f3, g3, p2);
-            gp.multiplot(f3, g3, p2, t);
+            //gp.multiplot(f3, g3, p2, t);
+            gp.multiplotMakePNG(f3, g3, p2, t);
         }
    
         for(int i=1; i<N; ++i){
