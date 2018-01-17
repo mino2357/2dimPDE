@@ -138,6 +138,21 @@ namespace mino2357{
             fprintf(gp, "e\n");
             fflush(gp);
         }
+		
+		void printRho(extendedArray& rho){
+            fprintf(gp, "splot '-' w l\n");
+            double x, y;
+			for(int i=1; i<N; i = i + plus){
+                for(int j=1; j<N; j = j + plus){
+                    x = xstart + i * dx;
+                    y = ystart + j * dy;
+					fprintf(gp, "%f %f %f\n", x, y, rho[i][j]);
+                }
+                fprintf(gp, "\n");
+            }
+            fprintf(gp, "e\n");
+            fflush(gp);
+        }
 
         void multiplot(extendedArray& f, extendedArray& g, extendedArray& p){
             fprintf(gp, "unset key\n");
@@ -213,7 +228,7 @@ namespace mino2357{
             fflush(gp);
             fprintf(gp, "unset multiplot\n");
         }
-        
+       /* 
         void multiplotMakePNG(extendedArray& f, extendedArray& g, extendedArray& p, double t){
             static int i = 0;
             fprintf(gp, "set term png size 1280, 720\n");
@@ -247,6 +262,49 @@ namespace mino2357{
             for(int i=1; i<N; i = i + plus/2){
                 for(int j=1; j<N; j = j + plus/2){
                     fprintf(gp, "%f %f %f\n", xstart+i*dx, ystart+j*dy, (p[i][j]));
+                }
+                fprintf(gp, "\n");
+            }
+            fprintf(gp, "e\n");
+            fflush(gp);
+            fprintf(gp, "unset multiplot\n");
+            fprintf(gp, "set output '%06d.png'\n", i);
+            i++;
+        }
+        */
+		void multiplotMakePNGWithDensity(extendedArray& f, extendedArray& g, extendedArray& d, double t){
+            static int i = 0;
+            fprintf(gp, "set term png size 1280, 720\n");
+            //fprintf(gp, "cd './test'\n");
+            fprintf(gp, "unset key\n");
+            fprintf(gp, "unset label\n");
+            fprintf(gp, "set label center at screen 0.5, 0.9 'Re=%5.0f,     t = %3.4f'\n", Re, t);
+            fprintf(gp, "set multiplot layout 1,2\n");
+            fprintf(gp, "set title 'velocity (log scale)'\n");
+            fprintf(gp, "set lmargin screen 0.1\n");
+            fprintf(gp, "set rmargin screen 0.42\n");
+            fprintf(gp, "set tmargin screen 0.9\n");
+            fprintf(gp, "set bmargin screen 0.1\n");
+            fprintf(gp, "plot '-' with vector linecolor palette\n");
+            for(int i=0; i<=N; i = i + plus){
+                for(int j=0; j<=N; j = j + plus){
+                    //double M = 0.01 * vecLen;
+                    double L = std::sqrt(f[i][j] * f[i][j] + g[i][j] * g[i][j]);
+                    fprintf(gp, "%f %f %f %f %f\n", xstart+i*dx, ystart+j*dy, 0.05 * f[i][j] / L, 0.05 * g[i][j] / L, std::log10(L));
+                }
+                fprintf(gp, "\n");
+            }
+            fprintf(gp, "e\n");
+
+            fprintf(gp, "set title 'Density'\n");
+            fprintf(gp, "set lmargin screen 0.58\n");
+            fprintf(gp, "set rmargin screen 0.9\n");
+            fprintf(gp, "set tmargin screen 0.9\n");
+            fprintf(gp, "set bmargin screen 0.1\n");
+            fprintf(gp, "splot '-' w l\n");
+            for(int i=1; i<N; i = i + plus){
+                for(int j=1; j<N; j = j + plus){
+                    fprintf(gp, "%f %f %f\n", xstart+i*dx, ystart+j*dy, (d[i][j]));
                 }
                 fprintf(gp, "\n");
             }

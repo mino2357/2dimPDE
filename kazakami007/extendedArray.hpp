@@ -1,7 +1,7 @@
+#pragma once
 #include <iostream>
+#include <cmath>
 #include <array>
-
-constexpr int N = 400;
 
 namespace rittai3d{
 	namespace utility{
@@ -28,17 +28,4 @@ namespace sksat {
 			return arr[i];
 		}
 	};
-}
-
-using extendedArray = sksat::array_wrapper<N + 1, sksat::array_wrapper<N + 1>>;
-
-int main(){
-
-    auto a = extendedArray{};
-    
-    for(int i=0; i<=N; ++i){
-        for(int j=0; j<=N; ++j){
-            a[i][j] = 1.0;
-        }
-    }
 }

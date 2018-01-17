@@ -179,6 +179,49 @@ namespace mino2357{
 			err = 0.0;
         }
     }
+
+	void setInitFuncRho(extendedArray& rho){
+		double x, y;
+		for(int i=0; i<=N; ++i){
+			for(int j=0; j<=N; ++j){
+				x = xstart + i*dx;
+				y = ystart + j*dy;
+				if(/*(x > 0.15 && x < 0.25) ||*/ (y > 0.45 && y < 0.55) || (x > 0.85 && x < 0.95)){// && y > 0.75 && y < 0.95){
+					rho[i][j] = 1.0;
+				}else{
+					rho[i][j] = 0.0;
+				}
+			}
+		}
+	}
+    
+	void succRho(extendedArray& rho1, extendedArray& f, extendedArray& g, extendedArray& rho2){
+        for(int i=1; i<N; ++i){
+            for(int j=1; j<N; ++j){
+                if(f[i][j] >= 0.0 && g[i][j] >= 0.0){
+                    rho2[i][j] = rho1[i][j] - f[i][j] * dt * (rho1[i][j] - rho1[i-1][j]) / dx
+                                            - g[i][j] * dt * (rho1[i][j] - rho1[i][j-1]) / dy
+                                        	+ dt * nu * (rho1[i-1][j] - 2.0 * rho1[i][j] + rho1[i+1][j]) / (dx * dx)
+                                        	+ dt * nu * (rho1[i][j-1] - 2.0 * rho1[i][j] + rho1[i][j+1]) / (dy * dy);
+                }else if(f[i][j] < 0.0 && g[i][j] >= 0.0){
+                    rho2[i][j] = rho1[i][j] + f[i][j] * dt * (rho1[i][j] - rho1[i+1][j]) / dx
+                                         	- g[i][j] * dt * (rho1[i][j] - rho1[i][j-1]) / dy
+                                        	+ dt * nu * (rho1[i-1][j] - 2.0 * rho1[i][j] + rho1[i+1][j]) / (dx * dx)
+                                        	+ dt * nu * (rho1[i][j-1] - 2.0 * rho1[i][j] + rho1[i][j+1]) / (dy * dy);
+                }else if(f[i][j] >= 0.0 && g[i][j] < 0.0){
+                    rho2[i][j] = rho1[i][j] - f[i][j] * dt * (rho1[i][j] - rho1[i-1][j]) / dx
+                                        	+ g[i][j] * dt * (rho1[i][j] - rho1[i][j+1]) / dy
+                                        	+ dt * nu * (rho1[i-1][j] - 2.0 * rho1[i][j] + rho1[i+1][j]) / (dx * dx)
+                                        	+ dt * nu * (rho1[i][j-1] - 2.0 * rho1[i][j] + rho1[i][j+1]) / (dy * dy);
+                }else{
+                    rho2[i][j] = rho1[i][j] + f[i][j] * dt * (rho1[i][j] - rho1[i+1][j]) / dx
+                                        	+ g[i][j] * dt * (rho1[i][j] - rho1[i][j+1]) / dy
+                                        	+ dt * nu * (rho1[i-1][j] - 2.0 * rho1[i][j] + rho1[i+1][j]) / (dx * dx)
+                                        	+ dt * nu * (rho1[i][j-1] - 2.0 * rho1[i][j] + rho1[i][j+1]) / (dy * dy);
+                }
+            }
+        }
+    }
 }
 
 
@@ -198,16 +241,21 @@ int main(){
     
 	auto dp1 = extendedArray{};
     auto dp2 = extendedArray{};
-    
+
+	auto rho1 = extendedArray{};
+	auto rho2 = extendedArray{};
+
 	auto err = 0.0;
 
     mino2357::setInitFuncF(f1);
     mino2357::setInitFuncG(g1);
     mino2357::setInitFuncP(p1);
+	mino2357::setInitFuncRho(rho1);
 
     std::cout << dt / (dx * Re) << std::endl;
 
     auto gp = mino2357::gnuplot();    
+	gp.printRho(rho1);
 
     std::cout << "Enter!" << std::endl;
     getchar();
@@ -236,6 +284,8 @@ int main(){
             }
         }
 
+		mino2357::succRho(rho1, f3, g3, rho2);
+
         if(it%INTV == 0){
             std::cout << itr << "  " << t << "  " << err << std::endl;
             //gp.printP(p2);
@@ -246,7 +296,9 @@ int main(){
             //gp.vectorWithSpeedLog10(f3, g3);
             //gp.vectorWithLog10P(f3, g3, p2);
             //gp.multiplot(f3, g3, p2, t);
-            gp.multiplotMakePNG(f3, g3, p2, t);
+            //gp.multiplotMakePNG(f3, g3, p2, t);
+			//gp.printRho(rho2);	
+			gp.multiplotMakePNGWithDensity(f3, g3, rho2, t);
         }
    
         for(int i=1; i<N; ++i){
@@ -254,6 +306,7 @@ int main(){
                 f1[i][j] = f3[i][j];
                 g1[i][j] = g3[i][j];
                 p1[i][j] = p2[i][j];
+				rho1[i][j] = rho2[i][j];
             }
         }
 		//境界圧力
